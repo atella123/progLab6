@@ -31,8 +31,11 @@ public final class ExecuteScript extends CollectionCommand {
     }
 
     @Override
-    public CommandResponse execute(String arg) {
-        File file = new File(arg);
+    public CommandResponse execute(Object... args) {
+        if (!isVaildArgumnet(args)) {
+            return new CommandResponse(CommandResult.ERROR, "Illegal argument");
+        }
+        File file = new File((String) args[0]);
         if (!bannedFiles.contains(file)) {
             bannedFiles.push(file);
             try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file));) {
@@ -117,6 +120,16 @@ public final class ExecuteScript extends CollectionCommand {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean isVaildArgumnet(Object... args) {
+        return args.length > 0 && args[0] instanceof String;
+    }
+
+    @Override
+    public Class<?>[] getArgumentClasses() {
+        return new Class<?>[] { String.class };
     }
 
 }

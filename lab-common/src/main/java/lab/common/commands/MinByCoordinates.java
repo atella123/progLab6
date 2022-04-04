@@ -17,7 +17,7 @@ public final class MinByCoordinates extends CollectionCommand {
     }
 
     @Override
-    public CommandResponse execute(String arg) {
+    public CommandResponse execute(Object... args) {
         Optional<Person> minPerson = getManager()
                 .getMinPerson((person1, person2) -> person1.getCoordinates().compareTo(person2.getCoordinates()));
         if (minPerson.isPresent()) {
@@ -34,5 +34,15 @@ public final class MinByCoordinates extends CollectionCommand {
     @Override
     public String toString() {
         return "MinByCoordinates";
+    }
+
+    @Override
+    public boolean isVaildArgumnet(Object... args) {
+        return true;
+    }
+
+    @Override
+    public Class<?>[] getArgumentClasses() {
+        return new Class<?>[] {};
     }
 }

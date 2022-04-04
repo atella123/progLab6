@@ -16,15 +16,11 @@ public abstract class Command {
         io = new IOManager();
     }
 
-    public static boolean isVaildArgumnet(Object o) {
-        return true;
-    }
+    public abstract boolean isVaildArgumnet(Object... args);
 
-    public static Class<?> argumentType() {
-        return String.class;
-    }
+    public abstract Class<?>[] getArgumentClasses();
 
-    public abstract CommandResponse execute(String arg);
+    public abstract CommandResponse execute(Object... args);
 
     public abstract String getMan();
 

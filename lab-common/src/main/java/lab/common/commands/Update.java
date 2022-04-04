@@ -1,13 +1,11 @@
 package lab.common.commands;
 
-import java.util.Objects;
 import java.util.Optional;
 
 import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
 import lab.common.exceptions.StringIsNullException;
 import lab.common.io.IOManager;
-import lab.common.parsers.PersonParser;
 
 public final class Update extends CollectionCommand {
 
@@ -20,31 +18,21 @@ public final class Update extends CollectionCommand {
     }
 
     @Override
-    public CommandResponse execute(String arg) {
-        Integer id = null;
-        CommandResponse commandResponse = null;
-        if (Objects.isNull(arg)) {
-            commandResponse = new CommandResponse(CommandResult.ERROR, "Integer type argument needed");
-        } else {
-            try {
-                id = Integer.parseInt(arg.replace(" ", ""));
-            } catch (NumberFormatException e) {
-                commandResponse = new CommandResponse(CommandResult.ERROR, "Illegal argument");
-            }
+    public CommandResponse execute(Object... args) {
+        if (!isVaildArgumnet(args)) {
+            return new CommandResponse(CommandResult.ERROR, "Illegal argument");
         }
-        if (Objects.nonNull(commandResponse)) {
-            return commandResponse;
-        }
+        Integer id = (Integer) args[0];
         Optional<Person> personToUpdate = getManager().getPersonByID(id);
         if (personToUpdate.isPresent()) {
             try {
-                getManager().updatePerson(personToUpdate.get(), PersonParser.parsePerson(getIO()));
+                getManager().updatePerson(personToUpdate.get(), (Person) args[1]);
                 return new CommandResponse(CommandResult.SUCCESS);
             } catch (StringIsNullException e) {
                 return new CommandResponse(CommandResult.END, "Person not parsed");
             }
         }
-        return new CommandResponse(CommandResult.ERROR, "No element with id (" + arg.replace(" ", "") + ") is present");
+        return new CommandResponse(CommandResult.ERROR, "No element with id (" + id + ") is present");
     }
 
     @Override
@@ -55,5 +43,18 @@ public final class Update extends CollectionCommand {
     @Override
     public String getMan() {
         return "update id {element} : обновить значение элемента коллекции, id которого равен заданному";
+    }
+
+    @Override
+    public boolean isVaildArgumnet(Object... args) {
+        if (args.length < 2) {
+            return false;
+        }
+        return args[0] instanceof Integer && args[1] instanceof Person;
+    }
+
+    @Override
+    public Class<?>[] getArgumentClasses() {
+        return new Class<?>[] { Integer.class, Person.class };
     }
 }

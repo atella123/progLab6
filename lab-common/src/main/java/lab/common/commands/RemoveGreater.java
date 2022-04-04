@@ -2,9 +2,7 @@ package lab.common.commands;
 
 import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
-import lab.common.exceptions.StringIsNullException;
 import lab.common.io.IOManager;
-import lab.common.parsers.PersonParser;
 
 public final class RemoveGreater extends CollectionCommand {
 
@@ -17,13 +15,11 @@ public final class RemoveGreater extends CollectionCommand {
     }
 
     @Override
-    public CommandResponse execute(String arg) {
-        Person p;
-        try {
-            p = PersonParser.parsePerson(this.getIO());
-        } catch (StringIsNullException e) {
-            return new CommandResponse(CommandResult.END, "Person not parsed");
+    public CommandResponse execute(Object... args) {
+        if (!isVaildArgumnet(args)) {
+            return new CommandResponse(CommandResult.ERROR, "Illegal argument");
         }
+        Person p = (Person) args[0];
         return new CommandResponse(CommandResult.SUCCESS, new Person[0],
                 getManager().removeIf(person -> p.compareTo(person) < 0).toArray(new Person[0]));
     }
@@ -37,4 +33,15 @@ public final class RemoveGreater extends CollectionCommand {
     public String getMan() {
         return "remove_greater {element} : удалить из коллекции все элементы, превышающие заданный";
     }
+
+    @Override
+    public boolean isVaildArgumnet(Object... args) {
+        return args.length > 0 && args[0] instanceof Person;
+    }
+
+    @Override
+    public Class<?>[] getArgumentClasses() {
+        return new Class<?>[] { Person.class };
+    }
+
 }

@@ -15,7 +15,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import lab.commands.ExecuteScript;
-
+import lab.common.data.Color;
+import lab.common.data.Coordinates;
+import lab.common.data.Location;
+import lab.common.data.Country;
 import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
 import lab.common.io.IOManager;
@@ -24,8 +27,14 @@ import lab.common.json.PersonCollectionDeserializer;
 import lab.common.json.PersonCollectionSerealizer;
 import lab.common.json.PersonDeserializer;
 import lab.common.json.PersonSerializer;
+import lab.common.parsers.CoordinatesParser;
+import lab.common.parsers.LocationParser;
+import lab.common.parsers.PersonParser;
+import lab.common.util.ArgumentParser;
 import lab.common.util.CommandManager;
 import lab.common.util.CommandRunner;
+import lab.common.util.DataReader;
+import lab.common.util.StringConverter;
 
 public final class Client {
 
@@ -37,31 +46,24 @@ public final class Client {
 
     public static void main(String[] args) {
 
-        try (DatagramSocket socket = new DatagramSocket()) {
-            String message = "help";
-            DatagramPacket packet = new DatagramPacket(message.getBytes(), message.getBytes().length,
-                    InetAddress.getLocalHost(), PORT);
-            socket.send(packet);
-            DatagramPacket packet2 = new DatagramPacket(new byte[BUFFER_SIZE], BUFFER_SIZE);
-            socket.receive(packet2);
-            System.out.println(new String(packet2.getData()));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        // try (DatagramSocket socket = new DatagramSocket()) {
+        // String message = "help";
+        // DatagramPacket packet = new DatagramPacket(message.getBytes(),
+        // message.getBytes().length,
+        // InetAddress.getLocalHost(), PORT);
+        // socket.send(packet);
+        // DatagramPacket packet2 = new DatagramPacket(new byte[BUFFER_SIZE],
+        // BUFFER_SIZE);
+        // socket.receive(packet2);
+        // System.out.println(new String(packet2.getData()));
+        // } catch (IOException e) {
+        // e.printStackTrace();
+        // }
 
         IOManager io = new IOManager();
-        if (args.length == 0) {
-            io.write("No arguments");
-            return;
-        }
-        File file = new File(args[0]);
         Gson gson = createGson();
-        Collection<Person> collection = readCollectionFromFile(file, gson, io);
-
-        PersonCollectionManager manager = new PersonCollectionManager(collection);
         CommandManager commandManager = new CommandManager();
-        CommandRunner runner = new CommandRunner(commandManager);
-        commandManager.setCommands(createCommandsMap(manager, gson, runner, file));
+        CommandRunner runner = new CommandRunner(commandManager, createArgumentParser(io));
         io.setReader(() -> {
             System.out.print("% ");
             return io.defaultConsoleReader().readLine();
@@ -81,4 +83,15 @@ public final class Client {
                 .registerTypeAdapter(Person.class, new PersonDeserializer()).create();
     }
 
+    public static ArgumentParser createArgumentParser(IOManager io) {
+        ArgumentParser argumentParser = new ArgumentParser();
+        argumentParser.add(Integer.class, Integer::valueOf);
+        argumentParser.add(String.class, x -> x);
+        argumentParser.add(Person.class, x -> PersonParser.parsePerson(io));
+        argumentParser.add(Coordinates.class, x -> CoordinatesParser.parseCoordinates(io));
+        argumentParser.add(Location.class, x -> LocationParser.parseLocation(io));
+        argumentParser.add(Country.class, x -> DataReader.readEnumValue(io, Country.class));
+        argumentParser.add(Color.class, x -> DataReader.readEnumValue(io, Color.class));
+        return argumentParser;
+    }
 }

@@ -1,11 +1,10 @@
 package lab.common.io;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.Scanner;
 
 public class IOManager {
 
-    private InputStreamReader inputStream = new InputStreamReader(System.in);
+    private Scanner inputScanner = new Scanner(System.in);
     private Reader reader = defaultConsoleReader();
     private Writter writter = System.out::println;
 
@@ -56,17 +55,10 @@ public class IOManager {
 
     public Reader defaultConsoleReader() {
         return () -> {
-            try {
-                StringBuilder stringBuilder = new StringBuilder();
-                int nextChar = inputStream.read();
-                while (nextChar != -1 && nextChar != Integer.valueOf('\n')) {
-                    stringBuilder.append((char) nextChar);
-                    nextChar = inputStream.read();
-                }
-                return stringBuilder.toString();
-            } catch (IOException e) {
-                return "";
+            if (inputScanner.hasNext()) {
+                return inputScanner.nextLine();
             }
+            return "";
         };
     }
 

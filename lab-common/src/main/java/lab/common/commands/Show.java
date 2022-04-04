@@ -16,7 +16,7 @@ public final class Show extends CollectionCommand {
     }
 
     @Override
-    public CommandResponse execute(String arg) {
+    public CommandResponse execute(Object... args) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Person manager elements:\n");
         stringBuilder
@@ -32,5 +32,15 @@ public final class Show extends CollectionCommand {
     @Override
     public String getMan() {
         return "show : вывести в стандартный поток вывода все элементы коллекции в строковом представлении";
+    }
+
+    @Override
+    public boolean isVaildArgumnet(Object... args) {
+        return true;
+    }
+
+    @Override
+    public Class<?>[] getArgumentClasses() {
+        return new Class<?>[] {};
     }
 }

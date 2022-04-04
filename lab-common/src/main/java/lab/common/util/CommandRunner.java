@@ -1,6 +1,7 @@
 package lab.common.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -15,19 +16,24 @@ public class CommandRunner {
     private IOManager io;
     private CommandManager commands;
     private ArrayList<Command> history = new ArrayList<>(HISTORY_SIZE);
+    private ArgumentParser argumentParser;
 
-    public CommandRunner(CommandManager commands) {
+    public CommandRunner(CommandManager commands, ArgumentParser argumentParser) {
         this.io = new IOManager();
+        commands.setIO(io);
         this.commands = commands;
+        this.argumentParser = argumentParser;
     }
 
-    public CommandRunner(IOManager io, CommandManager commands) {
+    public CommandRunner(IOManager io, CommandManager commands, ArgumentParser argumentParser) {
         this.io = io;
+        commands.setIO(io);
         this.commands = commands;
+        this.argumentParser = argumentParser;
     }
 
+    // @TODO divide command runned into servercommandrunner and clientcommnadrunner
     public void run() {
-        String[] cmd;
         String nextLine;
         CommandResponse resp;
         do {
@@ -35,36 +41,50 @@ public class CommandRunner {
             if (Objects.isNull(nextLine)) {
                 return;
             }
-            cmd = parseCommand(nextLine);
-            if (commands.containsKey(cmd[0])) {
-                resp = runCommand(commands.get(cmd[0]), cmd[1]);
-            } else {
-                resp = new CommandResponse(CommandResult.ERROR, "Unknown command");
-            }
+            resp = runCommand(nextLine);
             if (resp.hasPrintableResult()) {
                 io.write(resp.getMessage());
             }
         } while (!resp.getResult().equals(CommandResult.END));
     }
 
-    public CommandResponse runCommand(Command cmd, String arg) {
+    public CommandResponse runCommand(String commandWithArgs) {
+        Command command = parseCommand(commandWithArgs);
+        if (Objects.nonNull(command)) {
+            return runCommand(command, parseCommandArguments(command, parseArguments(commandWithArgs)));
+        }
+        return new CommandResponse(CommandResult.ERROR, "Unknown command");
+    }
+
+    public CommandResponse runCommand(Command cmd, Object[] args) {
         if (history.size() == HISTORY_SIZE) {
             history.remove(HISTORY_SIZE);
         }
         history.add(cmd);
-        return cmd.execute(arg);
+        return cmd.execute(args);
     }
 
     public Collection<Command> getHistory() {
         return history;
     }
 
-    public String[] parseCommand(String arg) {
-        String[] cmd = { arg.split("\\s+", 2)[0].replace(" ", ""), null };
-        if (arg.matches("\\w+\\s+.+")) {
-            cmd[1] = arg.split(" +", 2)[1];
+    public Command parseCommand(String arg) {
+        String cmd = arg.split("\\s+", 2)[0].trim();
+        return commands.get(cmd);
+    }
+
+    public String[] parseArguments(String arg) {
+        String[] splittedString = arg.trim().split("\\s+");
+        return Arrays.copyOfRange(splittedString, 1, splittedString.length);
+    }
+
+    public Object[] parseCommandArguments(Command command, String[] argumentsToParse) {
+        Class<?>[] argumentClasses = command.getArgumentClasses();
+        ArrayList<Object> arguments = new ArrayList<>(argumentClasses.length);
+        for (int i = 0; i < argumentClasses.length; i++) {
+            arguments.add(argumentParser.convert(argumentClasses[i], argumentsToParse[i]));
         }
-        return cmd;
+        return arguments.toArray();
     }
 
     public IOManager getIO() {

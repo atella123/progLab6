@@ -3,8 +3,6 @@ package lab.common.commands;
 import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
 import lab.common.io.IOManager;
-import lab.common.exceptions.StringIsNullException;
-import lab.common.parsers.PersonParser;
 
 public final class Add extends CollectionCommand {
 
@@ -17,14 +15,13 @@ public final class Add extends CollectionCommand {
     }
 
     @Override
-    public CommandResponse execute(String arg) {
-        try {
-            Person p = PersonParser.parsePerson(getIO());
-            getManager().add(p);
-            return new CommandResponse(CommandResult.SUCCESS, new Person[] { p }, new Person[0]);
-        } catch (StringIsNullException e) {
-            return new CommandResponse(CommandResult.END, "Person not parsed");
+    public CommandResponse execute(Object... args) {
+        if (!isVaildArgumnet(args)) {
+            return new CommandResponse(CommandResult.ERROR, "Illegal argument");
         }
+        Person p = (Person) args[0];
+        getManager().add(p);
+        return new CommandResponse(CommandResult.SUCCESS, new Person[] { p }, new Person[0]);
     }
 
     @Override
@@ -33,8 +30,13 @@ public final class Add extends CollectionCommand {
     }
 
     @Override
-    public boolean isVaildArgumnet(Object o) {
-        return o instanceof Person;
+    public boolean isVaildArgumnet(Object... args) {
+        return args.length > 0 && args[0] instanceof Person;
+    }
+
+    @Override
+    public Class<?>[] getArgumentClasses() {
+        return new Class<?>[] { Person.class };
     }
 
 }

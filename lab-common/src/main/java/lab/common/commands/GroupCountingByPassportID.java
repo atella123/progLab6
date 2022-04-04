@@ -18,7 +18,7 @@ public final class GroupCountingByPassportID extends CollectionCommand {
     }
 
     @Override
-    public CommandResponse execute(String arg) {
+    public CommandResponse execute(Object... args) {
         Map<String, Long> groupCounting = getManager().groupCounting(Person::getPassportID);
         return new CommandResponse(CommandResult.SUCCESS,
                 groupCounting.entrySet().stream()
@@ -34,5 +34,15 @@ public final class GroupCountingByPassportID extends CollectionCommand {
     @Override
     public String getMan() {
         return "group_counting_by_passport_id : сгруппировать элементы коллекции по значению поля passportID, вывести количество элементов в каждой группе";
+    }
+
+    @Override
+    public boolean isVaildArgumnet(Object... args) {
+        return true;
+    }
+
+    @Override
+    public Class<?>[] getArgumentClasses() {
+        return new Class<?>[] {};
     }
 }

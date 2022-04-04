@@ -1,7 +1,5 @@
 package lab.server;
 
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -12,6 +10,8 @@ import java.util.Objects;
 
 import com.google.gson.Gson;
 
+import lab.common.util.CommandRunner;
+
 public class PersonCollectionServer {
 
     private static final Integer BUFFER_SIZE = 1024;
@@ -19,21 +19,26 @@ public class PersonCollectionServer {
     private Gson gson;
     private int port;
     private DatagramChannel datagramChannel;
-    private Scanner conInputChannel;
+    private Scanner conInputScanner;
     private boolean runNext = true;
+    private final CommandRunner clientCommandRunner;
+    private final CommandRunner serverCommandRunner;
 
-    public PersonCollectionServer(int port, Gson gson) {
+    public PersonCollectionServer(int port, CommandRunner serverCommandRunner, CommandRunner clientCommandRunner,
+            Gson gson) {
         this.gson = gson;
+        this.serverCommandRunner = serverCommandRunner;
+        this.clientCommandRunner = clientCommandRunner;
         this.port = port;
     }
 
     public void run() {
 
-        try (FileInputStream conInputStream = new FileInputStream(FileDescriptor.in)) {
+        try {
             datagramChannel = DatagramChannel.open();
             datagramChannel.bind(new InetSocketAddress(port));
             datagramChannel.configureBlocking(false);
-            conInputChannel = new Scanner(System.in);
+            conInputScanner = new Scanner(System.in);
             while (runNext) {
                 handleClientRequest();
                 readFromConsole();
@@ -43,7 +48,7 @@ public class PersonCollectionServer {
         } finally {
             try {
                 datagramChannel.close();
-                conInputChannel.close();
+                conInputScanner.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -54,7 +59,7 @@ public class PersonCollectionServer {
     private void readFromConsole() {
         try {
             if (System.in.available() != 0) {
-                System.out.println(conInputChannel.nextLine());
+                serverCommandRunner.runCommand(conInputScanner.nextLine());
             }
         } catch (IOException e) {
             e.printStackTrace();

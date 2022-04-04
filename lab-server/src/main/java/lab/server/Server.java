@@ -4,17 +4,26 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
 
 import lab.common.commands.Command;
 import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
 import lab.common.json.DefalutGsonCreator;
+import lab.common.json.LocalDateDeserializer;
+import lab.common.json.PersonCollectionDeserializer;
+import lab.common.json.PersonCollectionSerealizer;
+import lab.common.json.PersonDeserializer;
+import lab.common.json.PersonSerializer;
 import lab.common.util.CommandRunner;
 import lab.common.io.IOManager;
 import lab.common.commands.Info;
@@ -42,9 +51,32 @@ public final class Server {
     }
 
     public static void main(String[] args) {
+        Gson gson = createGson();
+        File file = new File(args[0]);
+        IOManager io = new IOManager();
+        Collection<Person> collection = readCollectionFromFile(file, gson, io);
+        if (Objects.isNull(collection)) {
+            return;
+        }
+        Collection<Person> = readCollectionFromFile(file, gson, new IOManager());
+        PersonCollectionManager manager = new PersonCollectionManager();
+
+
         PersonCollectionServer personCollectionServer = new PersonCollectionServer(PORT,
+                createServerCommandsMap(manager, gson, file), createClientCommandsMap(manager, gson, runner, file),
                 DefalutGsonCreator.createGson());
         personCollectionServer.run();
+    }
+
+    public static Gson createGson() {
+        return new GsonBuilder().setPrettyPrinting()
+                .registerTypeAdapter(HashSet.class,
+                        new PersonCollectionSerealizer())
+                .registerTypeAdapter(HashSet.class,
+                        new PersonCollectionDeserializer())
+                .registerTypeAdapter(Person.class, new PersonSerializer())
+                .registerTypeAdapter(LocalDate.class, new LocalDateDeserializer())
+                .registerTypeAdapter(Person.class, new PersonDeserializer()).create();
     }
 
     @SuppressWarnings("unchecked")
@@ -72,7 +104,7 @@ public final class Server {
         return new HashSet<>();
     }
 
-    public static Map<String, Command> createCommandsMap(PersonCollectionManager manager, Gson gson,
+    public static Map<String, Command> createClientCommandsMap(PersonCollectionManager manager, Gson gson,
             CommandRunner runner, File file) {
         HashMap<String, Command> commands = new HashMap<>();
         commands.put("help", new Help(commands.values()));
@@ -90,6 +122,13 @@ public final class Server {
         commands.put("min_by_coordinates", new MinByCoordinates(manager));
         commands.put("group_counting_by_passport_id", new GroupCountingByPassportID(manager));
         commands.put("filter_less_than_nationality", new FilterLessThanNationality(manager));
+        return commands;
+    }
+
+    public static Map<String, Command> createServerCommandsMap(PersonCollectionManager manager, Gson gson, File file) {
+        HashMap<String, Command> commands = new HashMap<>();
+        commands.put("save", new Save(manager, gson, file));
+        commands.put("exit", new Exit());
         return commands;
     }
 }

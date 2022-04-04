@@ -15,7 +15,7 @@ public final class Clear extends CollectionCommand {
     }
 
     @Override
-    public CommandResponse execute(String arg) {
+    public CommandResponse execute(Object... args) {
         Person[] res = getManager().getCollection().stream().toArray(Person[]::new);
         getManager().clear();
         return new CommandResponse(CommandResult.SUCCESS, new Person[0], res);
@@ -31,7 +31,12 @@ public final class Clear extends CollectionCommand {
     }
 
     @Override
-    public boolean isVaildArgumnet(Object o) {
+    public boolean isVaildArgumnet(Object... args) {
         return true;
+    }
+
+    @Override
+    public Class<?>[] getArgumentClasses() {
+        return new Class<?>[] {};
     }
 }

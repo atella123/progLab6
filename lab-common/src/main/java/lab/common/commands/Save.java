@@ -27,7 +27,7 @@ public final class Save extends CollectionCommand {
     }
 
     @Override
-    public CommandResponse execute(String arg) {
+    public CommandResponse execute(Object... args) {
         if (file.exists() && file.canWrite()) {
             String json = gson.toJson(getManager().getCollection());
             try (FileWriter fileWriter = new FileWriter(file)) {
@@ -79,4 +79,15 @@ public final class Save extends CollectionCommand {
         }
         return true;
     }
+
+    @Override
+    public boolean isVaildArgumnet(Object... args) {
+        return true;
+    }
+
+    @Override
+    public Class<?>[] getArgumentClasses() {
+        return new Class<?>[] {};
+    }
+
 }

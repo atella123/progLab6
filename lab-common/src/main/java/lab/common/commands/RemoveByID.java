@@ -1,6 +1,5 @@
 package lab.common.commands;
 
-import java.util.Objects;
 import java.util.Optional;
 
 import lab.common.data.Person;
@@ -18,21 +17,11 @@ public final class RemoveByID extends CollectionCommand {
     }
 
     @Override
-    public CommandResponse execute(String arg) {
-        Integer id = null;
-        CommandResponse commandResponse = null;
-        if (Objects.isNull(arg)) {
-            commandResponse = new CommandResponse(CommandResult.ERROR, "Integer type argument needed");
-        } else {
-            try {
-                id = Integer.parseInt(arg.replace(" ", ""));
-            } catch (NumberFormatException e) {
-                commandResponse = new CommandResponse(CommandResult.ERROR, "Illegal argument");
-            }
+    public CommandResponse execute(Object... args) {
+        if (!isVaildArgumnet(args)) {
+            return new CommandResponse(CommandResult.ERROR, "Illegal argument");
         }
-        if (Objects.nonNull(commandResponse)) {
-            return commandResponse;
-        }
+        Integer id = (Integer) args[0];
         Optional<Person> person = getManager().removePersonByID(id);
         if (person.isPresent()) {
             return new CommandResponse(CommandResult.SUCCESS, new Person[0], new Person[] { person.get() });
@@ -49,5 +38,15 @@ public final class RemoveByID extends CollectionCommand {
     @Override
     public String getMan() {
         return "remove_by_id id : удалить элемент из коллекции по его id";
+    }
+
+    @Override
+    public boolean isVaildArgumnet(Object... args) {
+        return args.length > 0 && args[0] instanceof Integer;
+    }
+
+    @Override
+    public Class<?>[] getArgumentClasses() {
+        return new Class<?>[] { Integer.class };
     }
 }

@@ -1,11 +1,9 @@
 package lab.common.commands;
 
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import lab.common.data.Country;
 import lab.common.data.PersonCollectionManager;
-import lab.common.util.EnumUtil;
 import lab.common.io.IOManager;
 
 public final class FilterLessThanNationality extends CollectionCommand {
@@ -19,16 +17,11 @@ public final class FilterLessThanNationality extends CollectionCommand {
     }
 
     @Override
-    public CommandResponse execute(String arg) {
-        if (Objects.isNull(arg)) {
-            return new CommandResponse(CommandResult.ERROR, "Country type argument needed");
-        }
-        Country country;
-        String formattedArg = arg.trim().toUpperCase();
-        if (!EnumUtil.isEnumValue(formattedArg, Country.class)) {
+    public CommandResponse execute(Object... args) {
+        if (!isVaildArgumnet(args)) {
             return new CommandResponse(CommandResult.ERROR, "Illegal argument");
         }
-        country = Country.valueOf(formattedArg);
+        Country country = (Country) args[0];
         return new CommandResponse(CommandResult.SUCCESS,
                 getManager().filter(person -> person.getNationality().compareTo(country) < 0)
                         .map(Object::toString).collect(Collectors.joining("\n")));
@@ -39,7 +32,18 @@ public final class FilterLessThanNationality extends CollectionCommand {
         return "FilterLessThanNationality";
     }
 
+    @Override
+    public boolean isVaildArgumnet(Object... args) {
+        return args.length > 0 && args[0] instanceof Country;
+    }
+
+    @Override
     public String getMan() {
         return "filter_less_than_nationality nationality : вывести элементы, значение поля nationality которых меньше заданного";
+    }
+
+    @Override
+    public Class<?>[] getArgumentClasses() {
+        return new Class<?>[] { Country.class };
     }
 }

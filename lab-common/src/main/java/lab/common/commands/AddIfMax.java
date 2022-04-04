@@ -2,9 +2,7 @@ package lab.common.commands;
 
 import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
-import lab.common.exceptions.StringIsNullException;
 import lab.common.io.IOManager;
-import lab.common.parsers.PersonParser;
 
 public final class AddIfMax extends CollectionCommand {
 
@@ -17,13 +15,11 @@ public final class AddIfMax extends CollectionCommand {
     }
 
     @Override
-    public CommandResponse execute(String arg) {
-        Person p;
-        try {
-            p = PersonParser.parsePerson(getIO());
-        } catch (StringIsNullException e) {
-            return new CommandResponse(CommandResult.END);
+    public CommandResponse execute(Object... args) {
+        if (!isVaildArgumnet(args)) {
+            return new CommandResponse(CommandResult.ERROR, "Illegal argument");
         }
+        Person p = (Person) args[0];
         if (getManager().addIfAllMatch(p, person -> person.compareTo(p) < 0)) {
             return new CommandResponse(CommandResult.SUCCESS, new Person[] { p }, new Person[0]);
         }
@@ -41,7 +37,12 @@ public final class AddIfMax extends CollectionCommand {
     }
 
     @Override
-    public boolean isVaildArgumnet(Object o) {
-        return o instanceof Person;
+    public boolean isVaildArgumnet(Object... args) {
+        return args.length > 0 && args[0] instanceof Person;
+    }
+
+    @Override
+    public Class<?>[] getArgumentClasses() {
+        return new Class<?>[] { Person.class };
     }
 }

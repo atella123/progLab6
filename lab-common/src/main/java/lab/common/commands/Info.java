@@ -14,7 +14,7 @@ public final class Info extends CollectionCommand {
     }
 
     @Override
-    public CommandResponse execute(String arg) {
+    public CommandResponse execute(Object... args) {
         return new CommandResponse(CommandResult.SUCCESS, new StringBuilder()
                 .append("Collection type: ")
                 .append(getManager().getCollectionType())
@@ -33,5 +33,15 @@ public final class Info extends CollectionCommand {
     @Override
     public String getMan() {
         return "info : вывести в стандартный поток вывода информацию о коллекции (тип, дата инициализации, количество элементов и т.д.)";
+    }
+
+    @Override
+    public boolean isVaildArgumnet(Object... args) {
+        return true;
+    }
+
+    @Override
+    public Class<?>[] getArgumentClasses() {
+        return new Class<?>[] {};
     }
 }

@@ -1,6 +1,7 @@
 package lab.common.util;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import lab.common.commands.*;
@@ -8,13 +9,28 @@ import lab.common.io.IOManager;
 
 public class CommandManager {
 
+    private IOManager io;
+
     private Map<String, Command> commands;
 
     public CommandManager() {
+        this.io = new IOManager();
     }
 
     public CommandManager(Map<String, Command> commands) {
+        this.io = new IOManager();
         this.commands = commands;
+        setCommandsIO();
+    }
+
+    public CommandManager(IOManager io) {
+        this.io = io;
+    }
+
+    public CommandManager(Map<String, Command> commands, IOManager io) {
+        this.io = io;
+        this.commands = commands;
+        setCommandsIO();
     }
 
     public Command get(String key) {
@@ -26,6 +42,10 @@ public class CommandManager {
     }
 
     public void setIO(IOManager io) {
+        this.io = io;
+    }
+
+    private void setCommandsIO() {
         for (Command i : getCommands()) {
             i.setIO(io);
         }
@@ -40,11 +60,11 @@ public class CommandManager {
     }
 
     public IOManager getIO() {
-        return commands.values().iterator().next().getIO();
+        return io;
     }
 
     public Collection<Command> getCommands() {
-        return commands.values();
+        return Collections.unmodifiableCollection(commands.values());
     }
 
 }
