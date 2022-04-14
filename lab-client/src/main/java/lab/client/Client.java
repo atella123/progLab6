@@ -47,7 +47,6 @@ public final class Client {
     }
 
     public static void main(String[] args) {
-
         Scanner scanner = new Scanner(System.in);
         IOManager<String, String> io = new IOManager<>(() -> {
             System.out.print("% ");
@@ -62,7 +61,6 @@ public final class Client {
             scanner.close();
             return;
         }
-
         try {
             CommandManager<String> commandManager = new CommandManager<>();
             ArgumentParser<Object> argumentParser = new ArgumentParser<>();
@@ -71,6 +69,11 @@ public final class Client {
                             response -> {
                                 if (response.hasPrintableResult()) {
                                     System.out.println(response.getMessage());
+                                }
+                                if (response.hasCollectionToPrint()) {
+                                    for (Person p : response.getCollection()) {
+                                        System.out.println(p);
+                                    }
                                 }
                             }));
             updateArgumentParser(argumentParser, runner, createServerCommandsMap());

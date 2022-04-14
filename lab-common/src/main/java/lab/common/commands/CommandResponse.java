@@ -2,38 +2,38 @@ package lab.common.commands;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Comparator;
 
 import lab.common.data.Person;
 
 public class CommandResponse implements Serializable {
+    protected static final Comparator<Person> ALPHABETICAL_COMPARATOR = (p1, p2) -> p1.getName()
+            .compareTo(p2.getName());
     private final boolean printableResult;
     private final String message;
     private final CommandResult comandResult;
-    private final boolean changedCollection;
-    private final Person[] added;
-    private final Person[] removed;
+    private final boolean collectionToPrint;
+    private final Person[] collectionResult;
 
     public CommandResponse(CommandResult result) {
         this.printableResult = false;
         this.message = null;
         this.comandResult = result;
-        this.changedCollection = false;
-        this.added = null;
-        this.removed = null;
+        this.collectionToPrint = false;
+        this.collectionResult = null;
     }
 
-    public CommandResponse(CommandResult result, Person[] added, Person[] removed) {
+    public CommandResponse(CommandResult result, Person[] collectionResult) {
         this.printableResult = false;
         this.message = null;
         this.comandResult = result;
-        if (added.length != 0 && removed.length != 0) {
-            this.changedCollection = true;
-            this.added = added;
-            this.removed = removed;
+        if (collectionResult.length != 0) {
+            this.collectionToPrint = true;
+            Arrays.sort(collectionResult, ALPHABETICAL_COMPARATOR);
+            this.collectionResult = collectionResult;
         } else {
-            this.changedCollection = false;
-            this.added = null;
-            this.removed = null;
+            this.collectionToPrint = false;
+            this.collectionResult = null;
         }
     }
 
@@ -41,23 +41,21 @@ public class CommandResponse implements Serializable {
         this.printableResult = true;
         this.message = message;
         this.comandResult = result;
-        this.changedCollection = false;
-        this.added = null;
-        this.removed = null;
+        this.collectionToPrint = false;
+        this.collectionResult = null;
     }
 
-    public CommandResponse(CommandResult result, String message, Person[] added, Person[] removed) {
+    public CommandResponse(CommandResult result, String message, Person[] collectionResult) {
         this.printableResult = true;
         this.message = message;
         this.comandResult = result;
-        if (added.length != 0 && removed.length != 0) {
-            this.changedCollection = true;
-            this.added = added;
-            this.removed = removed;
+        if (collectionResult.length != 0) {
+            this.collectionToPrint = true;
+            Arrays.sort(collectionResult, ALPHABETICAL_COMPARATOR);
+            this.collectionResult = collectionResult;
         } else {
-            this.changedCollection = false;
-            this.added = null;
-            this.removed = null;
+            this.collectionToPrint = false;
+            this.collectionResult = null;
         }
     }
 
@@ -73,30 +71,25 @@ public class CommandResponse implements Serializable {
         return comandResult;
     }
 
-    public boolean hasChangedCollection() {
-        return changedCollection;
+    public boolean hasCollectionToPrint() {
+        return collectionToPrint;
     }
 
-    public Person[] getAdded() {
-        return added;
-    }
-
-    public Person[] getRemoved() {
-        return removed;
+    public Person[] getCollection() {
+        return collectionResult;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
-        final int num1 = 1231;
-        final int num2 = 1237;
+        final int n1 = 1231;
+        final int n2 = 1237;
         int result = 1;
-        result = prime * result + Arrays.hashCode(added);
-        result = prime * result + (changedCollection ? num1 : num2);
+        result = prime * result + Arrays.hashCode(collectionResult);
+        result = prime * result + (collectionToPrint ? n1 : n2);
+        result = prime * result + ((comandResult == null) ? 0 : comandResult.hashCode());
         result = prime * result + ((message == null) ? 0 : message.hashCode());
-        result = prime * result + (printableResult ? num1 : num2);
-        result = prime * result + Arrays.hashCode(removed);
-        result = prime * result + ((this.comandResult == null) ? 0 : this.comandResult.hashCode());
+        result = prime * result + (printableResult ? n1 : n2);
         return result;
     }
 
@@ -112,25 +105,21 @@ public class CommandResponse implements Serializable {
             return false;
         }
         CommandResponse other = (CommandResponse) obj;
-        if (!Arrays.equals(added, other.added)) {
+        if (!Arrays.equals(collectionResult, other.collectionResult)) {
             return false;
         }
-        if (changedCollection != other.changedCollection) {
+        if (collectionToPrint != other.collectionToPrint) {
+            return false;
+        }
+        if (comandResult != other.comandResult) {
             return false;
         }
         if (message == null) {
-            if (other.message != null) {
-                return false;
-            }
-        } else if (!message.equals(other.message)) {
-            return false;
+            return other.message == null;
+        } else if (message.equals(other.message)) {
+            return true;
         }
-        if (printableResult != other.printableResult) {
-            return false;
-        }
-        if (!Arrays.equals(removed, other.removed)) {
-            return false;
-        }
-        return comandResult == other.comandResult;
+        return printableResult == other.printableResult;
     }
+
 }

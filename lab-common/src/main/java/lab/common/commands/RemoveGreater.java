@@ -22,8 +22,8 @@ public final class RemoveGreater extends CollectionCommand {
             return new CommandResponse(CommandResult.ERROR, "Illegal argument");
         }
         Person p = (Person) args[0];
-        return new CommandResponse(CommandResult.SUCCESS, new Person[0],
-                getManager().removeIf(person -> p.compareTo(person) < 0).toArray(new Person[0]));
+        getManager().removeIf(person -> p.compareTo(person) < 0);
+        return new CommandResponse(CommandResult.SUCCESS);
     }
 
     @Override

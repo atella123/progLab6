@@ -23,8 +23,7 @@ public final class AddIfMax extends CollectionCommand {
         }
         Person p = (Person) args[0];
         if (getManager().addIfAllMatch(p, person -> person.compareTo(p) < 0)) {
-            return new CommandResponse(CommandResult.SUCCESS, new Person[] {
-                    p }, new Person[0]);
+            return new CommandResponse(CommandResult.SUCCESS);
         }
         return new CommandResponse(CommandResult.SUCCESS);
     }

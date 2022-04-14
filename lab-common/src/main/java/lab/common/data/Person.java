@@ -183,9 +183,9 @@ public class Person implements Comparable<Person>, Serializable {
 
     @Override
     public String toString() {
-        return "Person [coordinates=" + coordinates + ", creationDate=" + creationDate + ", eyeColor=" + eyeColor
-                + ", height=" + height + ", id=" + id + ", location=" + location + ", name=" + name + ", nationality="
-                + nationality + ", passportID=" + passportID + "]";
+        return "Person [name=" + name + ", creationDate=" + creationDate + ", eyeColor=" + eyeColor
+                + ", height=" + height + ", id=" + id + ", location=" + location + ", [coordinates=" + coordinates
+                + " +, nationality=" + nationality + ", passportID=" + passportID + "]";
     }
 
     @Override

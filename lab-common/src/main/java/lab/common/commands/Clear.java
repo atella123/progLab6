@@ -1,6 +1,5 @@
 package lab.common.commands;
 
-import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
 
 public final class Clear extends CollectionCommand {
@@ -18,9 +17,8 @@ public final class Clear extends CollectionCommand {
         if (!isExecutableInstance) {
             return new CommandResponse(CommandResult.ERROR, "Execute called on unexecutable instance");
         }
-        Person[] res = getManager().getCollection().stream().toArray(Person[]::new);
         getManager().clear();
-        return new CommandResponse(CommandResult.SUCCESS, new Person[0], res);
+        return new CommandResponse(CommandResult.SUCCESS);
     }
 
     @Override

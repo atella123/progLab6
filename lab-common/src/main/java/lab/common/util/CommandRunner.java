@@ -62,7 +62,7 @@ public abstract class CommandRunner<R, K> {
     }
 
     public CommandResponse runCommand(Command cmd, Object... args) {
-        if (history.size() == HISTORY_SIZE) {
+        if (history.size() > HISTORY_SIZE) {
             history.remove(HISTORY_SIZE);
         }
         history.add(cmd);

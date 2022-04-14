@@ -56,7 +56,9 @@ public final class RequestServer<R> extends Command {
         Class<?>[] argumentClasses = command.getArgumentClasses();
         ArrayList<Object> arguments = new ArrayList<>(argumentClasses.length);
         arguments.addAll(Arrays.asList(argumentsToParse));
-        arguments.addAll(Arrays.asList(new Object[argumentClasses.length - argumentsToParse.length]));
+        arguments.addAll(Arrays.asList(new Object[argumentClasses.length > argumentsToParse.length
+                ? argumentClasses.length - argumentsToParse.length
+                : 0]));
         for (int i = 0; i < argumentClasses.length; i++) {
             arguments.set(i, argumentParser.convert(argumentClasses[i], arguments.get(i)));
         }

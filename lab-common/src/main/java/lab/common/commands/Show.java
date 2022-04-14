@@ -1,7 +1,6 @@
 package lab.common.commands;
 
-import java.util.stream.Collectors;
-
+import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
 
 public final class Show extends CollectionCommand {
@@ -19,11 +18,9 @@ public final class Show extends CollectionCommand {
         if (!isExecutableInstance) {
             return new CommandResponse(CommandResult.ERROR, "Execute called on unexecutable instance");
         }
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Person manager elements:\n");
-        stringBuilder
-                .append(getManager().getCollection().stream().map(Object::toString).collect(Collectors.joining("\n")));
-        return new CommandResponse(CommandResult.SUCCESS, stringBuilder.toString());
+
+        return new CommandResponse(CommandResult.SUCCESS, "Person manager elements:",
+                getManager().getCollection().toArray(new Person[0]));
     }
 
     @Override

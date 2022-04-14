@@ -23,8 +23,7 @@ public final class Add extends CollectionCommand {
         }
         Person p = (Person) args[0];
         getManager().add(p);
-        return new CommandResponse(CommandResult.SUCCESS, new Person[] {
-                p }, new Person[0]);
+        return new CommandResponse(CommandResult.SUCCESS);
     }
 
     @Override
