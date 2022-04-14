@@ -13,12 +13,12 @@ import java.util.Scanner;
 
 import com.google.gson.Gson;
 
+import lab.commands.SaveAndExit;
 import lab.common.commands.Add;
 import lab.common.commands.AddIfMax;
 import lab.common.commands.Clear;
 import lab.common.commands.Command;
 import lab.common.commands.CommandResponse;
-import lab.common.commands.Exit;
 import lab.common.commands.FilterLessThanNationality;
 import lab.common.commands.GroupCountingByPassportID;
 import lab.common.commands.Help;
@@ -133,8 +133,9 @@ public final class Server {
 
     public static Map<String, Command> createServerCommandsMap(PersonCollectionManager manager, Gson gson, File file) {
         HashMap<String, Command> commands = new HashMap<>();
-        commands.put("save", new Save(manager, gson, file));
-        commands.put("exit", new Exit());
+        Save saveCommand = new Save(manager, gson, file);
+        commands.put("save", saveCommand);
+        commands.put("exit", new SaveAndExit(saveCommand));
         return commands;
     }
 
