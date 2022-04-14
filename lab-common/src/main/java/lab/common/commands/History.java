@@ -6,15 +6,22 @@ import lab.common.util.CommandRunner;
 
 public final class History extends Command {
 
-    private CommandRunner commands;
+    private CommandRunner<?, ?> commands;
 
-    public History(CommandRunner commands) {
+    public History() {
         super();
+    }
+
+    public History(CommandRunner<?, ?> commands) {
+        super(true);
         this.commands = commands;
     }
 
     @Override
     public CommandResponse execute(Object... args) {
+        if (!isExecutableInstance) {
+            return new CommandResponse(CommandResult.ERROR, "Execute called on unexecutable instance");
+        }
         return new CommandResponse(CommandResult.SUCCESS,
                 commands.getHistory().stream().map(Object::toString).collect(Collectors.joining("\n")));
     }
@@ -29,38 +36,39 @@ public final class History extends Command {
     }
 
     @Override
-    public boolean isVaildArgumnet(Object... args) {
+    public boolean isVaildArgument(Object... args) {
         return true;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = super.hashCode();
+        int result = 1;
         result = prime * result + ((commands == null) ? 0 : commands.hashCode());
         return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (!super.equals(obj))
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         History other = (History) obj;
         if (commands == null) {
-            if (other.commands != null)
-                return false;
-        } else if (!commands.equals(other.commands))
-            return false;
-        return true;
+            return other.commands == null;
+        }
+        return commands.equals(other.commands);
     }
 
     @Override
     public Class<?>[] getArgumentClasses() {
-        return new Class<?>[] {};
+        return new Class<?>[0];
     }
 
 }

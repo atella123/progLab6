@@ -6,57 +6,55 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Stack;
 
-import lab.common.commands.CollectionCommand;
+import lab.common.commands.Command;
 import lab.common.commands.CommandResponse;
 import lab.common.commands.CommandResult;
-import lab.common.data.PersonCollectionManager;
 import lab.common.util.CommandRunner;
-import lab.common.io.IOManager;
 import lab.common.io.Reader;
 
-public final class ExecuteScript extends CollectionCommand {
+public final class ExecuteScript extends Command {
 
-    private CommandRunner runner;
+    private final CommandRunner<String, ?> runner;
     private Stack<File> bannedFiles = new Stack<>();
-    private Stack<IOManager[]> oldIO = new Stack<>();
+    private Stack<Reader<String>> oldIO = new Stack<>();
 
-    public ExecuteScript(PersonCollectionManager manager, CommandRunner runner) {
-        super(manager);
-        this.runner = runner;
+    public ExecuteScript() {
+        super();
+        runner = null;
     }
 
-    public ExecuteScript(IOManager io, PersonCollectionManager manager, CommandRunner runner) {
-        super(io, manager);
+    public ExecuteScript(CommandRunner<String, ?> runner) {
+        super(true);
         this.runner = runner;
     }
 
     @Override
     public CommandResponse execute(Object... args) {
-        if (!isVaildArgumnet(args)) {
+        if (!isExecutableInstance) {
+            return new CommandResponse(CommandResult.ERROR, "Execute called on unexecutable instance");
+        }
+        if (!isVaildArgument(args)) {
             return new CommandResponse(CommandResult.ERROR, "Illegal argument");
         }
-        File file = new File((String) args[0]);
+        File file = (File) args[0];
         if (!bannedFiles.contains(file)) {
             bannedFiles.push(file);
             try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file));) {
-                oldIO.push(new IOManager[] { runner.getIO(), runner.getCommandManager().getIO() });
-                IOManager newIO = new IOManager(createReader(bufferedReader), getIO().getWritter());
-                runner.setIO(newIO);
-                runner.getCommandManager().setIO(newIO);
+                oldIO.push(runner.getIO().getReader());
+                Reader<String> newReader = createReader(bufferedReader);
+                runner.setReader(newReader);
                 runner.run();
-                runner.setIO(oldIO.peek()[0]);
-                runner.getCommandManager().setIO(oldIO.pop()[1]);
-                return new CommandResponse(CommandResult.SUCCESS);
+                runner.setReader(oldIO.pop());
             } catch (IOException e) {
                 return new CommandResponse(CommandResult.ERROR, "Unable to read file");
             } finally {
                 bannedFiles.pop();
             }
         }
-        return new CommandResponse(CommandResult.ERROR, "File already opened");
+        return new CommandResponse(CommandResult.SUCCESS);
     }
 
-    private Reader createReader(BufferedReader bufferedReader) {
+    private Reader<String> createReader(BufferedReader bufferedReader) {
         return () -> {
             try {
                 return bufferedReader.readLine();
@@ -113,23 +111,20 @@ public final class ExecuteScript extends CollectionCommand {
             return false;
         }
         if (runner == null) {
-            if (other.runner != null) {
-                return false;
-            }
-        } else if (!runner.equals(other.runner)) {
-            return false;
+            return other.runner == null;
         }
-        return true;
+        return runner.equals(other.runner);
     }
 
     @Override
-    public boolean isVaildArgumnet(Object... args) {
-        return args.length > 0 && args[0] instanceof String;
+    public boolean isVaildArgument(Object... args) {
+        return args.length > 0 && args[0] instanceof File;
     }
 
     @Override
     public Class<?>[] getArgumentClasses() {
-        return new Class<?>[] { String.class };
+        return new Class<?>[] {
+                File.class };
     }
 
 }

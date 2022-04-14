@@ -5,12 +5,11 @@ import java.util.stream.Collectors;
 
 import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
-import lab.common.io.IOManager;
 
 public final class GroupCountingByPassportID extends CollectionCommand {
 
-    public GroupCountingByPassportID(IOManager io, PersonCollectionManager manager) {
-        super(io, manager);
+    public GroupCountingByPassportID() {
+        super();
     }
 
     public GroupCountingByPassportID(PersonCollectionManager manager) {
@@ -19,6 +18,9 @@ public final class GroupCountingByPassportID extends CollectionCommand {
 
     @Override
     public CommandResponse execute(Object... args) {
+        if (!isExecutableInstance) {
+            return new CommandResponse(CommandResult.ERROR, "Execute called on unexecutable instance");
+        }
         Map<String, Long> groupCounting = getManager().groupCounting(Person::getPassportID);
         return new CommandResponse(CommandResult.SUCCESS,
                 groupCounting.entrySet().stream()
@@ -37,12 +39,12 @@ public final class GroupCountingByPassportID extends CollectionCommand {
     }
 
     @Override
-    public boolean isVaildArgumnet(Object... args) {
+    public boolean isVaildArgument(Object... args) {
         return true;
     }
 
     @Override
     public Class<?>[] getArgumentClasses() {
-        return new Class<?>[] {};
+        return new Class<?>[0];
     }
 }

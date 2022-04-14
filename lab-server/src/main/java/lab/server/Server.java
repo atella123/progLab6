@@ -4,28 +4,25 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Scanner;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonParseException;
 
+import lab.common.commands.Add;
+import lab.common.commands.AddIfMax;
+import lab.common.commands.Clear;
 import lab.common.commands.Command;
-import lab.common.data.Person;
-import lab.common.data.PersonCollectionManager;
-import lab.common.json.DefalutGsonCreator;
-import lab.common.json.LocalDateDeserializer;
-import lab.common.json.PersonCollectionDeserializer;
-import lab.common.json.PersonCollectionSerealizer;
-import lab.common.json.PersonDeserializer;
-import lab.common.json.PersonSerializer;
-import lab.common.util.CommandRunner;
-import lab.common.io.IOManager;
+import lab.common.commands.CommandResponse;
+import lab.common.commands.Exit;
+import lab.common.commands.FilterLessThanNationality;
+import lab.common.commands.GroupCountingByPassportID;
+import lab.common.commands.Help;
+import lab.common.commands.History;
 import lab.common.commands.Info;
 import lab.common.commands.MinByCoordinates;
 import lab.common.commands.RemoveByID;
@@ -33,54 +30,65 @@ import lab.common.commands.RemoveGreater;
 import lab.common.commands.Save;
 import lab.common.commands.Show;
 import lab.common.commands.Update;
-import lab.common.commands.Add;
-import lab.common.commands.AddIfMax;
-import lab.common.commands.Clear;
-import lab.common.commands.Exit;
-import lab.common.commands.FilterLessThanNationality;
-import lab.common.commands.GroupCountingByPassportID;
-import lab.common.commands.Help;
-import lab.common.commands.History;
+import lab.common.data.Person;
+import lab.common.data.PersonCollectionManager;
+import lab.common.io.IOManager;
+import lab.common.io.Writter;
+import lab.common.json.DefalutGsonCreator;
+import lab.common.util.ArgumentParser;
+import lab.common.util.CommandManager;
+import lab.io.DatagramChannelIOManager;
+import lab.util.PersonCollectionServer;
+import lab.util.ServerCommandRunner;
+import lab.util.ServerToClientCommandRunner;
 
 public final class Server {
-
-    private static final Integer PORT = 1234;
 
     private Server() {
         throw new UnsupportedOperationException("This is an utility class and can not be instantiated");
     }
 
     public static void main(String[] args) {
-        Gson gson = createGson();
-        File file = new File(args[0]);
-        IOManager io = new IOManager();
-        Collection<Person> collection = readCollectionFromFile(file, gson, io);
-        if (Objects.isNull(collection)) {
+        Scanner scanner = new Scanner(System.in);
+        IOManager<String, String> io = new IOManager<>(
+                () -> {
+                    if (scanner.hasNext()) {
+                        return scanner.nextLine();
+                    }
+                    return "";
+                }, System.out::println);
+        File file = getSourceFile(args, io::write);
+        int port = getServerPort(args, io::write);
+        if (Objects.isNull(file) || port == -1) {
+            scanner.close();
             return;
         }
-        Collection<Person> = readCollectionFromFile(file, gson, new IOManager());
-        PersonCollectionManager manager = new PersonCollectionManager();
-
-
-        PersonCollectionServer personCollectionServer = new PersonCollectionServer(PORT,
-                createServerCommandsMap(manager, gson, file), createClientCommandsMap(manager, gson, runner, file),
-                DefalutGsonCreator.createGson());
-        personCollectionServer.run();
-    }
-
-    public static Gson createGson() {
-        return new GsonBuilder().setPrettyPrinting()
-                .registerTypeAdapter(HashSet.class,
-                        new PersonCollectionSerealizer())
-                .registerTypeAdapter(HashSet.class,
-                        new PersonCollectionDeserializer())
-                .registerTypeAdapter(Person.class, new PersonSerializer())
-                .registerTypeAdapter(LocalDate.class, new LocalDateDeserializer())
-                .registerTypeAdapter(Person.class, new PersonDeserializer()).create();
+        Gson gson = DefalutGsonCreator.createGson();
+        Collection<Person> collection = readCollectionFromFile(file, gson, io::write);
+        PersonCollectionManager manager = new PersonCollectionManager(collection);
+        CommandManager<Class<? extends Command>> clientCommandManager = new CommandManager<>();
+        ServerToClientCommandRunner clientCommandRunner;
+        try {
+            clientCommandRunner = new ServerToClientCommandRunner(clientCommandManager,
+                    new ArgumentParser<>(), new DatagramChannelIOManager(port));
+        } catch (IOException e) {
+            io.write("Socket is already bound");
+            scanner.close();
+            return;
+        }
+        clientCommandManager.setCommands(createClientCommandsMap(manager, clientCommandRunner));
+        CommandManager<String> serverCommandManager = new CommandManager<>(
+                createServerCommandsMap(manager, gson, file));
+        ServerCommandRunner serverCommandRunner = new ServerCommandRunner(serverCommandManager,
+                new ArgumentParser<>(), new IOManager<>(io::readLine, createDefaultWritter()));
+        PersonCollectionServer personCollectionServer = new PersonCollectionServer(serverCommandRunner,
+                clientCommandRunner);
+        personCollectionServer.start();
+        scanner.close();
     }
 
     @SuppressWarnings("unchecked")
-    public static Collection<Person> readCollectionFromFile(File file, Gson gson, IOManager io) {
+    public static Collection<Person> readCollectionFromFile(File file, Gson gson, Writter<String> writter) {
         StringBuilder jsonBuilder = new StringBuilder();
         if (file.exists() && file.isFile()) {
             try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
@@ -94,34 +102,32 @@ public final class Server {
                 if (result.length() != 0) {
                     return gson.fromJson(result, HashSet.class);
                 }
-                io.write("File is empty");
+                writter.write("File is empty");
             } catch (IOException e) {
-                io.write("Can't read collection from file");
+                writter.write("Can't read collection from file");
             }
         } else {
-            io.write("Can't find file");
+            writter.write("Can't find file");
         }
         return new HashSet<>();
     }
 
-    public static Map<String, Command> createClientCommandsMap(PersonCollectionManager manager, Gson gson,
-            CommandRunner runner, File file) {
-        HashMap<String, Command> commands = new HashMap<>();
-        commands.put("help", new Help(commands.values()));
-        commands.put("info", new Info(manager));
-        commands.put("show", new Show(manager));
-        commands.put("add", new Add(manager));
-        commands.put("update", new Update(manager));
-        commands.put("remove_by_id", new RemoveByID(manager));
-        commands.put("clear", new Clear(manager));
-        commands.put("save", new Save(manager, gson, file));
-        commands.put("exit", new Exit());
-        commands.put("add_if_max", new AddIfMax(manager));
-        commands.put("remove_greater", new RemoveGreater(manager));
-        commands.put("history", new History(runner));
-        commands.put("min_by_coordinates", new MinByCoordinates(manager));
-        commands.put("group_counting_by_passport_id", new GroupCountingByPassportID(manager));
-        commands.put("filter_less_than_nationality", new FilterLessThanNationality(manager));
+    public static Map<Class<? extends Command>, Command> createClientCommandsMap(PersonCollectionManager manager,
+            ServerToClientCommandRunner runner) {
+        HashMap<Class<? extends Command>, Command> commands = new HashMap<>();
+        commands.put(Help.class, new Help(commands.values()));
+        commands.put(Info.class, new Info(manager));
+        commands.put(Show.class, new Show(manager));
+        commands.put(Add.class, new Add(manager));
+        commands.put(Update.class, new Update(manager));
+        commands.put(RemoveByID.class, new RemoveByID(manager));
+        commands.put(Clear.class, new Clear(manager));
+        commands.put(AddIfMax.class, new AddIfMax(manager));
+        commands.put(RemoveGreater.class, new RemoveGreater(manager));
+        commands.put(History.class, new History(runner));
+        commands.put(MinByCoordinates.class, new MinByCoordinates(manager));
+        commands.put(GroupCountingByPassportID.class, new GroupCountingByPassportID(manager));
+        commands.put(FilterLessThanNationality.class, new FilterLessThanNationality(manager));
         return commands;
     }
 
@@ -130,5 +136,41 @@ public final class Server {
         commands.put("save", new Save(manager, gson, file));
         commands.put("exit", new Exit());
         return commands;
+    }
+
+    public static File getSourceFile(String[] args, Writter<String> writter) {
+        if (args.length == 0) {
+            writter.write("Path to collection file must be provided");
+            return null;
+        }
+        File file = new File(args[0]);
+        if (file.exists()) {
+            return file;
+        }
+        writter.write("No file found");
+        return null;
+    }
+
+    public static int getServerPort(String[] args, Writter<String> writter) {
+        final int defaultPort = 1234;
+        if (args.length == 1) {
+            writter.write("Set default port");
+            return defaultPort;
+        }
+        try {
+            return Integer.valueOf(args[1]);
+        } catch (NumberFormatException e) {
+            writter.write(
+                    "Second agrument must either be valid integer or not present (if so will be set to default value)");
+        }
+        return -1;
+    }
+
+    public static Writter<CommandResponse> createDefaultWritter() {
+        return (CommandResponse response) -> {
+            if (response.hasPrintableResult()) {
+                System.out.println(response.getMessage());
+            }
+        };
     }
 }

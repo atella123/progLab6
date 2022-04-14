@@ -4,63 +4,33 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-import lab.common.commands.*;
-import lab.common.io.IOManager;
+import lab.common.commands.Command;
 
-public class CommandManager {
+public class CommandManager<K> {
 
-    private IOManager io;
-
-    private Map<String, Command> commands;
+    private Map<K, Command> commands;
 
     public CommandManager() {
-        this.io = new IOManager();
     }
 
-    public CommandManager(Map<String, Command> commands) {
-        this.io = new IOManager();
+    public CommandManager(Map<K, Command> commands) {
         this.commands = commands;
-        setCommandsIO();
     }
 
-    public CommandManager(IOManager io) {
-        this.io = io;
-    }
-
-    public CommandManager(Map<String, Command> commands, IOManager io) {
-        this.io = io;
-        this.commands = commands;
-        setCommandsIO();
-    }
-
-    public Command get(String key) {
+    public Command get(Object key) {
         return commands.get(key);
     }
 
-    public void setCommands(Map<String, Command> commands) {
+    public void setCommands(Map<K, Command> commands) {
         this.commands = commands;
-    }
-
-    public void setIO(IOManager io) {
-        this.io = io;
-    }
-
-    private void setCommandsIO() {
-        for (Command i : getCommands()) {
-            i.setIO(io);
-        }
     }
 
     public boolean containsValue(Command command) {
         return commands.containsValue(command);
     }
 
-    public boolean containsKey(String key) {
+    public boolean containsKey(Object key) {
         return commands.containsKey(key);
-    }
-
-    public IOManager getIO() {
-        return io;
     }
 
     public Collection<Command> getCommands() {

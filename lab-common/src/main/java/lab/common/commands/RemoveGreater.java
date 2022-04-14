@@ -2,12 +2,11 @@ package lab.common.commands;
 
 import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
-import lab.common.io.IOManager;
 
 public final class RemoveGreater extends CollectionCommand {
 
-    public RemoveGreater(IOManager io, PersonCollectionManager manager) {
-        super(io, manager);
+    public RemoveGreater() {
+        super();
     }
 
     public RemoveGreater(PersonCollectionManager manager) {
@@ -16,7 +15,10 @@ public final class RemoveGreater extends CollectionCommand {
 
     @Override
     public CommandResponse execute(Object... args) {
-        if (!isVaildArgumnet(args)) {
+        if (!isExecutableInstance) {
+            return new CommandResponse(CommandResult.ERROR, "Execute called on unexecutable instance");
+        }
+        if (!isVaildArgument(args)) {
             return new CommandResponse(CommandResult.ERROR, "Illegal argument");
         }
         Person p = (Person) args[0];
@@ -35,13 +37,14 @@ public final class RemoveGreater extends CollectionCommand {
     }
 
     @Override
-    public boolean isVaildArgumnet(Object... args) {
+    public boolean isVaildArgument(Object... args) {
         return args.length > 0 && args[0] instanceof Person;
     }
 
     @Override
     public Class<?>[] getArgumentClasses() {
-        return new Class<?>[] { Person.class };
+        return new Class<?>[] {
+                Person.class };
     }
 
 }

@@ -4,12 +4,11 @@ import java.util.Optional;
 
 import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
-import lab.common.io.IOManager;
 
 public final class RemoveByID extends CollectionCommand {
 
-    public RemoveByID(IOManager io, PersonCollectionManager manager) {
-        super(io, manager);
+    public RemoveByID() {
+        super();
     }
 
     public RemoveByID(PersonCollectionManager manager) {
@@ -18,13 +17,17 @@ public final class RemoveByID extends CollectionCommand {
 
     @Override
     public CommandResponse execute(Object... args) {
-        if (!isVaildArgumnet(args)) {
+        if (!isExecutableInstance) {
+            return new CommandResponse(CommandResult.ERROR, "Execute called on unexecutable instance");
+        }
+        if (!isVaildArgument(args)) {
             return new CommandResponse(CommandResult.ERROR, "Illegal argument");
         }
         Integer id = (Integer) args[0];
         Optional<Person> person = getManager().removePersonByID(id);
         if (person.isPresent()) {
-            return new CommandResponse(CommandResult.SUCCESS, new Person[0], new Person[] { person.get() });
+            return new CommandResponse(CommandResult.SUCCESS, new Person[0], new Person[] {
+                    person.get() });
         }
         return new CommandResponse(CommandResult.ERROR, "No such element");
 
@@ -41,12 +44,13 @@ public final class RemoveByID extends CollectionCommand {
     }
 
     @Override
-    public boolean isVaildArgumnet(Object... args) {
+    public boolean isVaildArgument(Object... args) {
         return args.length > 0 && args[0] instanceof Integer;
     }
 
     @Override
     public Class<?>[] getArgumentClasses() {
-        return new Class<?>[] { Integer.class };
+        return new Class<?>[] {
+                Integer.class };
     }
 }

@@ -1,65 +1,46 @@
 package lab.common.io;
 
-import java.util.Scanner;
+public class IOManager<R, W> {
 
-public class IOManager {
-
-    private Scanner inputScanner = new Scanner(System.in);
-    private Reader reader = defaultConsoleReader();
-    private Writter writter = System.out::println;
-
-    public IOManager(Writter writter) {
-        this.writter = writter;
-    }
-
-    public IOManager(Reader reader) {
-        this.reader = reader;
-    }
-
-    public IOManager(Reader reader, Writter writter) {
-        this.reader = reader;
-        this.writter = writter;
-    }
+    private Reader<R> reader;
+    private Writter<W> writter;
 
     public IOManager() {
+
     }
 
-    public Reader getReader() {
+    public IOManager(Reader<R> reader, Writter<W> writter) {
+        this.reader = reader;
+        this.writter = writter;
+    }
+
+    public Reader<R> getReader() {
         return reader;
     }
 
-    public void setReader(Reader reader) {
+    public void setReader(Reader<R> reader) {
         this.reader = reader;
     }
 
-    public Writter getWritter() {
+    public Writter<W> getWritter() {
         return writter;
     }
 
-    public void setWritter(Writter writter) {
+    public void setWritter(Writter<W> writter) {
         this.writter = writter;
     }
 
-    public void setIO(Reader newReader, Writter newWritter) {
+    public void setIO(Reader<R> newReader, Writter<W> newWritter) {
         this.setReader(newReader);
         this.setWritter(newWritter);
     }
 
-    public void write(String s) {
-        writter.write(s);
+    public void write(W message) {
+        writter.write(message);
     }
 
-    public String readLine() {
+    public R readLine() {
         return reader.readLine();
-    }
-
-    public Reader defaultConsoleReader() {
-        return () -> {
-            if (inputScanner.hasNext()) {
-                return inputScanner.nextLine();
-            }
-            return "";
-        };
     }
 
     @Override
@@ -82,7 +63,7 @@ public class IOManager {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        IOManager other = (IOManager) obj;
+        IOManager<?, ?> other = (IOManager<?, ?>) obj;
         if (reader == null) {
             if (other.reader != null) {
                 return false;

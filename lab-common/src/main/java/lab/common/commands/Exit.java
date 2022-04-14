@@ -2,6 +2,10 @@ package lab.common.commands;
 
 public final class Exit extends Command {
 
+    public Exit() {
+        super(true);
+    }
+
     @Override
     public CommandResponse execute(Object... args) {
         return new CommandResponse(CommandResult.END);
@@ -17,13 +21,13 @@ public final class Exit extends Command {
     }
 
     @Override
-    public boolean isVaildArgumnet(Object... args) {
+    public boolean isVaildArgument(Object... args) {
         return true;
     }
 
     @Override
     public Class<?>[] getArgumentClasses() {
-        return new Class<?>[] {};
+        return new Class<?>[0];
     }
 
 }

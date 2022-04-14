@@ -22,6 +22,8 @@ public final class DefalutGsonCreator {
                         new PersonCollectionDeserializer())
                 .registerTypeAdapter(Person.class, new PersonSerializer())
                 .registerTypeAdapter(LocalDate.class, new LocalDateDeserializer())
-                .registerTypeAdapter(Person.class, new PersonDeserializer()).create();
+                .registerTypeAdapter(Person.class, new PersonDeserializer())
+                .setPrettyPrinting()
+                .create();
     }
 }

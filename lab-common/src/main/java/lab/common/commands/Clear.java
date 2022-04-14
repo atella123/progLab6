@@ -2,12 +2,11 @@ package lab.common.commands;
 
 import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
-import lab.common.io.IOManager;
 
 public final class Clear extends CollectionCommand {
 
-    public Clear(IOManager io, PersonCollectionManager manager) {
-        super(io, manager);
+    public Clear() {
+        super();
     }
 
     public Clear(PersonCollectionManager manager) {
@@ -16,6 +15,9 @@ public final class Clear extends CollectionCommand {
 
     @Override
     public CommandResponse execute(Object... args) {
+        if (!isExecutableInstance) {
+            return new CommandResponse(CommandResult.ERROR, "Execute called on unexecutable instance");
+        }
         Person[] res = getManager().getCollection().stream().toArray(Person[]::new);
         getManager().clear();
         return new CommandResponse(CommandResult.SUCCESS, new Person[0], res);
@@ -31,12 +33,12 @@ public final class Clear extends CollectionCommand {
     }
 
     @Override
-    public boolean isVaildArgumnet(Object... args) {
+    public boolean isVaildArgument(Object... args) {
         return true;
     }
 
     @Override
     public Class<?>[] getArgumentClasses() {
-        return new Class<?>[] {};
+        return new Class<?>[0];
     }
 }

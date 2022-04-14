@@ -1,10 +1,11 @@
 package lab.common.data;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import lab.common.exceptions.IllegalFieldValueException;
 
-public class Coordinates implements Comparable<Coordinates> {
+public class Coordinates implements Comparable<Coordinates>, Serializable {
     private Float x; // Поле не может быть null
     private Integer y; // Значение поля должно быть больше -322, Поле не может быть null
 

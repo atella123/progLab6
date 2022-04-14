@@ -13,7 +13,7 @@ public final class EnumUtil {
         return Arrays.stream(constants).map(Object::toString).anyMatch(x -> x.equals(s));
     }
 
-    public static <E extends Enum<E>> void printEnumValues(IOManager io, Class<E> e) {
+    public static <E extends Enum<E>> void printEnumValues(IOManager<String, String> io, Class<E> e) {
         for (E i : e.getEnumConstants()) {
             io.write(i.toString());
         }

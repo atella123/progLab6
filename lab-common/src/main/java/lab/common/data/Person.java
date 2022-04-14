@@ -1,11 +1,12 @@
 package lab.common.data;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Objects;
 
 import lab.common.exceptions.IllegalFieldValueException;
 
-public class Person implements Comparable<Person> {
+public class Person implements Comparable<Person>, Serializable {
 
     private Integer id; // Поле не может быть null, Значение поля должно быть больше 0, Значение этого
                         // поля должно быть уникальным, Значение этого поля должно генерироваться

@@ -7,12 +7,16 @@ import java.io.IOException;
 import com.google.gson.Gson;
 
 import lab.common.data.PersonCollectionManager;
-import lab.common.io.IOManager;
 
 public final class Save extends CollectionCommand {
 
     private Gson gson;
     private final File file;
+
+    public Save() {
+        super();
+        file = null;
+    }
 
     public Save(PersonCollectionManager manager, Gson gson, File file) {
         super(manager);
@@ -20,14 +24,11 @@ public final class Save extends CollectionCommand {
         this.file = file;
     }
 
-    public Save(IOManager io, PersonCollectionManager manager, Gson gson, File file) {
-        super(io, manager);
-        this.gson = gson;
-        this.file = file;
-    }
-
     @Override
     public CommandResponse execute(Object... args) {
+        if (!isExecutableInstance) {
+            return new CommandResponse(CommandResult.ERROR, "Execute called on unexecutable instance");
+        }
         if (file.exists() && file.canWrite()) {
             String json = gson.toJson(getManager().getCollection());
             try (FileWriter fileWriter = new FileWriter(file)) {
@@ -51,9 +52,20 @@ public final class Save extends CollectionCommand {
     }
 
     @Override
+    public boolean isVaildArgument(Object... args) {
+        return true;
+    }
+
+    @Override
+    public Class<?>[] getArgumentClasses() {
+        return new Class<?>[0];
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
+        result = prime * result + ((file == null) ? 0 : file.hashCode());
         result = prime * result + ((gson == null) ? 0 : gson.hashCode());
         return result;
     }
@@ -70,24 +82,16 @@ public final class Save extends CollectionCommand {
             return false;
         }
         Save other = (Save) obj;
-        if (gson == null) {
-            if (other.gson != null) {
+        if (file == null) {
+            if (other.file != null) {
                 return false;
             }
-        } else if (!gson.equals(other.gson)) {
+        } else if (!file.equals(other.file)) {
             return false;
         }
-        return true;
+        if (gson == null) {
+            return other.gson == null;
+        }
+        return gson.equals(other.gson);
     }
-
-    @Override
-    public boolean isVaildArgumnet(Object... args) {
-        return true;
-    }
-
-    @Override
-    public Class<?>[] getArgumentClasses() {
-        return new Class<?>[] {};
-    }
-
 }

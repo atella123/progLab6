@@ -4,12 +4,11 @@ import java.util.Optional;
 
 import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
-import lab.common.io.IOManager;
 
 public final class MinByCoordinates extends CollectionCommand {
 
-    public MinByCoordinates(IOManager io, PersonCollectionManager manager) {
-        super(io, manager);
+    public MinByCoordinates() {
+        super();
     }
 
     public MinByCoordinates(PersonCollectionManager manager) {
@@ -18,6 +17,9 @@ public final class MinByCoordinates extends CollectionCommand {
 
     @Override
     public CommandResponse execute(Object... args) {
+        if (!isExecutableInstance) {
+            return new CommandResponse(CommandResult.ERROR, "Execute called on unexecutable instance");
+        }
         Optional<Person> minPerson = getManager()
                 .getMinPerson((person1, person2) -> person1.getCoordinates().compareTo(person2.getCoordinates()));
         if (minPerson.isPresent()) {
@@ -37,12 +39,12 @@ public final class MinByCoordinates extends CollectionCommand {
     }
 
     @Override
-    public boolean isVaildArgumnet(Object... args) {
+    public boolean isVaildArgument(Object... args) {
         return true;
     }
 
     @Override
     public Class<?>[] getArgumentClasses() {
-        return new Class<?>[] {};
+        return new Class<?>[0];
     }
 }

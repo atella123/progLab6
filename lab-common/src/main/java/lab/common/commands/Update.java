@@ -4,13 +4,11 @@ import java.util.Optional;
 
 import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
-import lab.common.exceptions.StringIsNullException;
-import lab.common.io.IOManager;
 
 public final class Update extends CollectionCommand {
 
-    public Update(IOManager io, PersonCollectionManager manager) {
-        super(io, manager);
+    public Update() {
+        super();
     }
 
     public Update(PersonCollectionManager manager) {
@@ -19,18 +17,17 @@ public final class Update extends CollectionCommand {
 
     @Override
     public CommandResponse execute(Object... args) {
-        if (!isVaildArgumnet(args)) {
+        if (!isExecutableInstance) {
+            return new CommandResponse(CommandResult.ERROR, "Execute called on unexecutable instance");
+        }
+        if (!isVaildArgument(args)) {
             return new CommandResponse(CommandResult.ERROR, "Illegal argument");
         }
         Integer id = (Integer) args[0];
         Optional<Person> personToUpdate = getManager().getPersonByID(id);
         if (personToUpdate.isPresent()) {
-            try {
-                getManager().updatePerson(personToUpdate.get(), (Person) args[1]);
-                return new CommandResponse(CommandResult.SUCCESS);
-            } catch (StringIsNullException e) {
-                return new CommandResponse(CommandResult.END, "Person not parsed");
-            }
+            getManager().updatePerson(personToUpdate.get(), (Person) args[1]);
+            return new CommandResponse(CommandResult.SUCCESS);
         }
         return new CommandResponse(CommandResult.ERROR, "No element with id (" + id + ") is present");
     }
@@ -46,7 +43,7 @@ public final class Update extends CollectionCommand {
     }
 
     @Override
-    public boolean isVaildArgumnet(Object... args) {
+    public boolean isVaildArgument(Object... args) {
         if (args.length < 2) {
             return false;
         }
@@ -55,6 +52,7 @@ public final class Update extends CollectionCommand {
 
     @Override
     public Class<?>[] getArgumentClasses() {
-        return new Class<?>[] { Integer.class, Person.class };
+        return new Class<?>[] {
+                Integer.class, Person.class };
     }
 }

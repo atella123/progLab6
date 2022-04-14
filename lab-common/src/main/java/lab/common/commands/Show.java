@@ -3,12 +3,11 @@ package lab.common.commands;
 import java.util.stream.Collectors;
 
 import lab.common.data.PersonCollectionManager;
-import lab.common.io.IOManager;
 
 public final class Show extends CollectionCommand {
 
-    public Show(IOManager io, PersonCollectionManager manager) {
-        super(io, manager);
+    public Show() {
+        super();
     }
 
     public Show(PersonCollectionManager manager) {
@@ -17,6 +16,9 @@ public final class Show extends CollectionCommand {
 
     @Override
     public CommandResponse execute(Object... args) {
+        if (!isExecutableInstance) {
+            return new CommandResponse(CommandResult.ERROR, "Execute called on unexecutable instance");
+        }
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Person manager elements:\n");
         stringBuilder
@@ -35,12 +37,12 @@ public final class Show extends CollectionCommand {
     }
 
     @Override
-    public boolean isVaildArgumnet(Object... args) {
+    public boolean isVaildArgument(Object... args) {
         return true;
     }
 
     @Override
     public Class<?>[] getArgumentClasses() {
-        return new Class<?>[] {};
+        return new Class<?>[0];
     }
 }

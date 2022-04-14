@@ -9,54 +9,59 @@ import lab.common.commands.Command;
 import lab.common.commands.CommandResponse;
 import lab.common.commands.CommandResult;
 import lab.common.io.IOManager;
+import lab.common.io.Reader;
+import lab.common.io.Writter;
 
-public class CommandRunner {
+public abstract class CommandRunner<R, K> {
 
     private static final int HISTORY_SIZE = 11;
-    private IOManager io;
-    private CommandManager commands;
+    private IOManager<R, CommandResponse> io;
+    private final CommandManager<K> commandManager;
     private ArrayList<Command> history = new ArrayList<>(HISTORY_SIZE);
-    private ArgumentParser argumentParser;
+    private ArgumentParser<Object> argumentParser;
 
-    public CommandRunner(CommandManager commands, ArgumentParser argumentParser) {
-        this.io = new IOManager();
-        commands.setIO(io);
-        this.commands = commands;
+    public CommandRunner(CommandManager<K> commandManager, ArgumentParser<Object> argumentParser,
+            IOManager<R, CommandResponse> io) {
+        this.commandManager = commandManager;
         this.argumentParser = argumentParser;
-    }
-
-    public CommandRunner(IOManager io, CommandManager commands, ArgumentParser argumentParser) {
         this.io = io;
-        commands.setIO(io);
-        this.commands = commands;
-        this.argumentParser = argumentParser;
     }
 
-    // @TODO divide command runned into servercommandrunner and clientcommnadrunner
+    public abstract Command parseCommand(R arg);
+
+    public abstract Object[] parseArgumentsFromReadedObject(R arg);
+
     public void run() {
-        String nextLine;
         CommandResponse resp;
         do {
-            nextLine = io.readLine();
-            if (Objects.isNull(nextLine)) {
-                return;
-            }
-            resp = runCommand(nextLine);
-            if (resp.hasPrintableResult()) {
-                io.write(resp.getMessage());
-            }
-        } while (!resp.getResult().equals(CommandResult.END));
+            resp = runNextCommmand();
+            io.write(resp);
+        } while (!resp.getResult().equals(CommandResult.END) && !resp.getResult().equals(CommandResult.NO_INPUT));
     }
 
-    public CommandResponse runCommand(String commandWithArgs) {
+    public CommandResponse runNextCommmand() {
+        R nextCommandWithArgumnets;
+        nextCommandWithArgumnets = io.readLine();
+        if (Objects.isNull(nextCommandWithArgumnets)) {
+            return new CommandResponse(CommandResult.NO_INPUT);
+        }
+        return runCommand(nextCommandWithArgumnets);
+    }
+
+    public void writeCommandResponse(CommandResponse response) {
+        io.write(response);
+    }
+
+    public CommandResponse runCommand(R commandWithArgs) {
         Command command = parseCommand(commandWithArgs);
         if (Objects.nonNull(command)) {
-            return runCommand(command, parseCommandArguments(command, parseArguments(commandWithArgs)));
+            Object[] arguments = parseArguments(command, parseArgumentsFromReadedObject(commandWithArgs));
+            return runCommand(command, arguments);
         }
-        return new CommandResponse(CommandResult.ERROR, "Unknown command");
+        return new CommandResponse(CommandResult.COMMAND_NOT_FOUND, "Unknown command");
     }
 
-    public CommandResponse runCommand(Command cmd, Object[] args) {
+    public CommandResponse runCommand(Command cmd, Object... args) {
         if (history.size() == HISTORY_SIZE) {
             history.remove(HISTORY_SIZE);
         }
@@ -64,38 +69,51 @@ public class CommandRunner {
         return cmd.execute(args);
     }
 
+    public Object[] parseArguments(Command command, Object[] argumentsToParse) {
+        Class<?>[] argumentClasses = command.getArgumentClasses();
+        ArrayList<Object> arguments = new ArrayList<>(argumentClasses.length);
+        arguments.addAll(Arrays.asList(argumentsToParse));
+        for (int i = 0; i < argumentClasses.length; i++) {
+            arguments.set(i, argumentParser.convert(argumentClasses[i], arguments.get(i)));
+        }
+        arguments.addAll(Arrays.asList(argumentsToParse).subList(argumentClasses.length, argumentsToParse.length));
+        return arguments.toArray();
+    }
+
     public Collection<Command> getHistory() {
         return history;
     }
 
-    public Command parseCommand(String arg) {
-        String cmd = arg.split("\\s+", 2)[0].trim();
-        return commands.get(cmd);
-    }
-
-    public String[] parseArguments(String arg) {
-        String[] splittedString = arg.trim().split("\\s+");
-        return Arrays.copyOfRange(splittedString, 1, splittedString.length);
-    }
-
-    public Object[] parseCommandArguments(Command command, String[] argumentsToParse) {
-        Class<?>[] argumentClasses = command.getArgumentClasses();
-        ArrayList<Object> arguments = new ArrayList<>(argumentClasses.length);
-        for (int i = 0; i < argumentClasses.length; i++) {
-            arguments.add(argumentParser.convert(argumentClasses[i], argumentsToParse[i]));
-        }
-        return arguments.toArray();
-    }
-
-    public IOManager getIO() {
+    public IOManager<R, CommandResponse> getIO() {
         return io;
     }
 
-    public CommandManager getCommandManager() {
-        return commands;
-    }
-
-    public void setIO(IOManager newIO) {
+    public void setIO(IOManager<R, CommandResponse> newIO) {
         this.io = newIO;
     }
+
+    public void setIO(Reader<R> reader, Writter<CommandResponse> writter) {
+        this.io = new IOManager<>(reader, writter);
+    }
+
+    public Reader<R> getReader() {
+        return io.getReader();
+    }
+
+    public void setReader(Reader<R> reader) {
+        io.setReader(reader);
+    }
+
+    public Writter<CommandResponse> getWritter() {
+        return io.getWritter();
+    }
+
+    public void setWritter(Writter<CommandResponse> writter) {
+        io.setWritter(writter);
+    }
+
+    public CommandManager<K> getCommandManager() {
+        return commandManager;
+    }
+
 }
