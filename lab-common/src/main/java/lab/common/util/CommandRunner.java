@@ -73,10 +73,16 @@ public abstract class CommandRunner<R, K> {
         Class<?>[] argumentClasses = command.getArgumentClasses();
         ArrayList<Object> arguments = new ArrayList<>(argumentClasses.length);
         arguments.addAll(Arrays.asList(argumentsToParse));
-        for (int i = 0; i < argumentClasses.length; i++) {
-            arguments.set(i, argumentParser.convert(argumentClasses[i], arguments.get(i)));
+        if (argumentClasses.length > argumentsToParse.length) {
+            arguments.addAll(Arrays.asList(new Object[argumentClasses.length - argumentsToParse.length]));
         }
-        arguments.addAll(Arrays.asList(argumentsToParse).subList(argumentClasses.length, argumentsToParse.length));
+        for (int i = 0; i < argumentClasses.length; i++) {
+            Object nextArg = argumentParser.convert(argumentClasses[i], arguments.get(i));
+            if (Objects.isNull(nextArg)) {
+                return new Object[0];
+            }
+            arguments.set(i, nextArg);
+        }
         return arguments.toArray();
     }
 

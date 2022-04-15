@@ -37,9 +37,10 @@ import lab.common.io.Writter;
 import lab.common.json.DefalutGsonCreator;
 import lab.common.util.ArgumentParser;
 import lab.common.util.CommandManager;
+import lab.common.util.CommandRunner;
+import lab.common.util.DefaultCommandRunner;
 import lab.io.DatagramChannelIOManager;
 import lab.util.PersonCollectionServer;
-import lab.util.ServerCommandRunner;
 import lab.util.ServerToClientCommandRunner;
 
 public final class Server {
@@ -79,7 +80,7 @@ public final class Server {
         clientCommandManager.setCommands(createClientCommandsMap(manager, clientCommandRunner));
         CommandManager<String> serverCommandManager = new CommandManager<>(
                 createServerCommandsMap(manager, gson, file));
-        ServerCommandRunner serverCommandRunner = new ServerCommandRunner(serverCommandManager,
+        CommandRunner<String, String> serverCommandRunner = new DefaultCommandRunner(serverCommandManager,
                 new ArgumentParser<>(), new IOManager<>(io::readLine, createDefaultWritter()));
         PersonCollectionServer personCollectionServer = new PersonCollectionServer(serverCommandRunner,
                 clientCommandRunner);

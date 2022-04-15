@@ -5,14 +5,15 @@ import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 
 import lab.commands.ExecuteScript;
-import lab.commands.RequestServer;
 import lab.common.commands.Add;
 import lab.common.commands.AddIfMax;
 import lab.common.commands.Clear;
 import lab.common.commands.Command;
+import lab.common.commands.CommandResponse;
 import lab.common.commands.Exit;
 import lab.common.commands.FilterLessThanNationality;
 import lab.common.commands.GroupCountingByPassportID;
@@ -38,7 +39,7 @@ import lab.common.util.ArgumentParser;
 import lab.common.util.CommandManager;
 import lab.common.util.CommandRunner;
 import lab.common.util.DataReader;
-import lab.io.DatagramSocketIOManager;
+import lab.common.util.DefaultCommandRunner;
 import lab.util.ClientCommandRunner;
 
 public final class Client {
@@ -55,53 +56,78 @@ public final class Client {
             }
             return "";
         }, System.out::println);
-
         int port = getServerPort(args, io::write);
         if (port == -1) {
             scanner.close();
             return;
         }
         try {
-            CommandManager<String> commandManager = new CommandManager<>();
-            ArgumentParser<Object> argumentParser = new ArgumentParser<>();
-            ClientCommandRunner runner = new ClientCommandRunner(commandManager, argumentParser,
-                    new IOManager<>(io::readLine,
-                            response -> {
-                                if (response.hasPrintableResult()) {
-                                    System.out.println(response.getMessage());
-                                }
-                                if (response.hasCollectionToPrint()) {
-                                    for (Person p : response.getCollection()) {
-                                        System.out.println(p);
-                                    }
-                                }
-                            }));
-            updateArgumentParser(argumentParser, runner, createServerCommandsMap());
-            commandManager.setCommands(
-                    createCommands(port, createServerCommandsMap(), argumentParser, runner));
-            runner.run();
+            createCommandRunner(port, io).run();
         } catch (SocketException e) {
             io.write("Socket couldn't be binded");
         }
         scanner.close();
     }
 
+    public static ClientCommandRunner createCommandRunner(int port, IOManager<String, ?> io) throws SocketException {
+        CommandManager<String> clientCommandManager = new CommandManager<>();
+        ArgumentParser<Object> argumentParser = new ArgumentParser<>();
+        IOManager<String, CommandResponse> commandRunnerIO = new IOManager<>(io::readLine,
+                response -> {
+                    if (response.hasPrintableResult()) {
+                        System.out.println(response.getMessage());
+                    }
+                    if (response.hasCollectionToPrint()) {
+                        for (Person p : response.getCollection()) {
+                            System.out.println(p);
+                        }
+                    }
+                });
+        CommandManager<String> serverCommandManager = new CommandManager<>(createServerCommandsMap());
+        CommandRunner<String, String> toServerCommandRunner = new DefaultCommandRunner(
+                serverCommandManager,
+                argumentParser, commandRunnerIO);
+        ClientCommandRunner runner = new ClientCommandRunner(clientCommandManager, toServerCommandRunner,
+                argumentParser, new InetSocketAddress("localhost", port), commandRunnerIO);
+        updateArgumentParser(argumentParser, runner, serverCommandManager);
+        clientCommandManager.setCommands(createCommands(runner));
+        return runner;
+    }
+
     public static void updateArgumentParser(ArgumentParser<Object> argumentParser, CommandRunner<String, ?> runner,
             CommandManager<String> commandManager) {
         argumentParser.add(Command.class, commandManager::get);
-        argumentParser.add(Integer.class, x -> Integer.valueOf(x.toString()));
-        argumentParser.add(String.class, Object::toString);
+        argumentParser.add(Integer.class, x -> {
+            try {
+                return Integer.valueOf(x.toString());
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        });
+        argumentParser.add(String.class, Client::convertToString);
+        argumentParser.add(Country.class,
+                x -> DataReader.readEnumValue(convertToString(x), Country.class));
+        argumentParser.add(Color.class,
+                x -> DataReader.readEnumValue(convertToString(x), Color.class));
+        argumentParser.add(File.class, x -> {
+            if (Objects.nonNull(x)) {
+                return new File(x.toString());
+            }
+            return null;
+        });
         argumentParser.add(Person.class,
                 x -> PersonParser.parsePerson(new IOManager<>(runner.getReader(), System.out::println)));
         argumentParser.add(Coordinates.class,
                 x -> CoordinatesParser.parseCoordinates(new IOManager<>(runner.getReader(), System.out::println)));
         argumentParser.add(Location.class,
                 x -> LocationParser.parseLocation(new IOManager<>(runner.getReader(), System.out::println)));
-        argumentParser.add(Country.class,
-                x -> DataReader.readEnumValue(new IOManager<>(runner.getReader(), System.out::println), Country.class));
-        argumentParser.add(Color.class,
-                x -> DataReader.readEnumValue(new IOManager<>(runner.getReader(), System.out::println), Color.class));
-        argumentParser.add(File.class, x -> new File(x.toString()));
+    }
+
+    public static String convertToString(Object o) {
+        if (Objects.isNull(o)) {
+            return null;
+        }
+        return o.toString();
     }
 
     public static int getServerPort(String[] args, Writter<String> writter) {
@@ -119,19 +145,14 @@ public final class Client {
         return -1;
     }
 
-    public static Map<String, Command> createCommands(int port, CommandManager<String> serverCommands,
-            ArgumentParser<Object> argumentParser, CommandRunner<String, ?> commandRunner) throws SocketException {
+    public static Map<String, Command> createCommands(CommandRunner<String, ?> commandRunner) {
         HashMap<String, Command> commands = new HashMap<>();
-        commands.put("",
-                new RequestServer<String>(new DatagramSocketIOManager(new InetSocketAddress("localhost", port)),
-                        serverCommands,
-                        argumentParser));
         commands.put("exit", new Exit());
         commands.put("execute_script", new ExecuteScript(commandRunner));
         return commands;
     }
 
-    public static CommandManager<String> createServerCommandsMap() {
+    public static Map<String, Command> createServerCommandsMap() {
         HashMap<String, Command> commands = new HashMap<>();
         commands.put("help", new Help());
         commands.put("info", new Info());
@@ -146,6 +167,6 @@ public final class Client {
         commands.put("min_by_coordinates", new MinByCoordinates());
         commands.put("group_counting_by_passport_id", new GroupCountingByPassportID());
         commands.put("filter_less_than_nationality", new FilterLessThanNationality());
-        return new CommandManager<>(commands);
+        return commands;
     }
 }

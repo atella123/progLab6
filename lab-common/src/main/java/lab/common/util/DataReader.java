@@ -85,4 +85,11 @@ public final class DataReader {
         } while (!EnumUtil.isEnumValue(s, enumClass));
         return Enum.valueOf(enumClass, s);
     }
+
+    public static <E extends Enum<E>> E readEnumValue(String s, Class<E> enumClass) {
+        if (Objects.nonNull(s) && EnumUtil.isEnumValue(s.toUpperCase(), enumClass)) {
+            return Enum.valueOf(enumClass, s.toUpperCase());
+        }
+        return null;
+    }
 }

@@ -1,17 +1,14 @@
-package lab.util;
+package lab.common.util;
 
 import java.util.Arrays;
 
 import lab.common.commands.Command;
 import lab.common.commands.CommandResponse;
 import lab.common.io.IOManager;
-import lab.common.util.ArgumentParser;
-import lab.common.util.CommandManager;
-import lab.common.util.CommandRunner;
 
-public class ServerCommandRunner extends CommandRunner<String, String> {
+public class DefaultCommandRunner extends CommandRunner<String, String> {
 
-    public ServerCommandRunner(CommandManager<String> commandManager, ArgumentParser<Object> argumentParser,
+    public DefaultCommandRunner(CommandManager<String> commandManager, ArgumentParser<Object> argumentParser,
             IOManager<String, CommandResponse> io) {
         super(commandManager, argumentParser, io);
     }

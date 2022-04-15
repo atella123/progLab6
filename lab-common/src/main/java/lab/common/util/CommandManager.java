@@ -17,8 +17,16 @@ public class CommandManager<K> {
         this.commands = commands;
     }
 
+    public void add(K key, Command command) {
+        commands.put(key, command);
+    }
+
     public Command get(Object key) {
         return commands.get(key);
+    }
+
+    public Command getOrDefault(Object key, Command defaultValue) {
+        return commands.getOrDefault(key, defaultValue);
     }
 
     public void setCommands(Map<K, Command> commands) {

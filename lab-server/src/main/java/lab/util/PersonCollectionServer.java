@@ -5,13 +5,14 @@ import java.io.InputStreamReader;
 
 import lab.common.commands.CommandResponse;
 import lab.common.commands.CommandResult;
+import lab.common.util.CommandRunner;
 
 public final class PersonCollectionServer {
 
-    private final ServerCommandRunner serverCommandRunner;
+    private final CommandRunner<String, String> serverCommandRunner;
     private final ServerToClientCommandRunner serverToClientCommandRunner;
 
-    public PersonCollectionServer(ServerCommandRunner serverCommandRunner,
+    public PersonCollectionServer(CommandRunner<String, String> serverCommandRunner,
             ServerToClientCommandRunner serverToClientCommandRunner) {
         this.serverCommandRunner = serverCommandRunner;
         this.serverToClientCommandRunner = serverToClientCommandRunner;
@@ -36,7 +37,7 @@ public final class PersonCollectionServer {
         }
     }
 
-    public ServerCommandRunner getServerCommandRunner() {
+    public CommandRunner<String, String> getServerCommandRunner() {
         return serverCommandRunner;
     }
 
