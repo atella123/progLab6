@@ -3,6 +3,7 @@ package lab.client;
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -56,20 +57,21 @@ public final class Client {
             }
             return "";
         }, System.out::println);
-        int port = getServerPort(args, io::write);
-        if (port == -1) {
+        InetSocketAddress serverAddress = getServerAdress(args, io::write);
+        if (Objects.isNull(serverAddress)) {
             scanner.close();
             return;
         }
         try {
-            createCommandRunner(port, io).run();
+            createCommandRunner(serverAddress, io).run();
         } catch (SocketException e) {
             io.write("Socket couldn't be binded");
         }
         scanner.close();
     }
 
-    public static ClientCommandRunner createCommandRunner(int port, IOManager<String, ?> io) throws SocketException {
+    public static ClientCommandRunner createCommandRunner(InetSocketAddress serverAdress, IOManager<String, ?> io)
+            throws SocketException {
         CommandManager<String> clientCommandManager = new CommandManager<>();
         ArgumentParser<Object> argumentParser = new ArgumentParser<>();
         IOManager<String, CommandResponse> commandRunnerIO = new IOManager<>(io::readLine,
@@ -88,7 +90,7 @@ public final class Client {
                 serverCommandManager,
                 argumentParser, commandRunnerIO);
         ClientCommandRunner runner = new ClientCommandRunner(clientCommandManager, toServerCommandRunner,
-                argumentParser, new InetSocketAddress("localhost", port), commandRunnerIO);
+                argumentParser, serverAdress, commandRunnerIO);
         updateArgumentParser(argumentParser, runner, serverCommandManager);
         clientCommandManager.setCommands(createCommands(runner));
         return runner;
@@ -130,25 +132,40 @@ public final class Client {
         return o.toString();
     }
 
-    public static int getServerPort(String[] args, Writter<String> writter) {
-        final int defaultPort = 1234;
+    public static InetSocketAddress getServerAdress(String[] args, Writter<String> writter) {
         final int maxPort = 65535;
+        final int minPort = 1;
+        final int defaultPort = 1234;
         if (args.length < 1) {
-            writter.write("Set default port");
-            return defaultPort;
+            writter.write("Set default server adress (localhost:1234)");
+            return new InetSocketAddress("localhost", defaultPort);
         }
+        String[] ipAndPort = args[0].split(":");
+        if (ipAndPort.length != 2) {
+            writter.write("Invalid ip adress");
+            return null;
+        }
+        int port = defaultPort;
         try {
-            int port = Integer.valueOf(args[0]);
-            if (port > maxPort || port < 1) {
+            port = Integer.parseInt(ipAndPort[1]);
+            if (port > maxPort || port < minPort) {
                 writter.write("Port value must be between 0 and 65536");
-                return -1;
+                return null;
             }
-            return port;
         } catch (NumberFormatException e) {
-            writter.write(
-                    "Second agrument must either be valid integer or not present (if so will be set to default value)");
+            writter.write("Invalid port vaalue, set port to default (1234)");
         }
-        return -1;
+        String[] bytes = ipAndPort[0].split("\\.");
+        final byte ipByteCount = 4;
+        InetSocketAddress serverAdress = null;
+        if (bytes.length == ipByteCount && Arrays.stream(bytes)
+                .allMatch(x -> x.matches("((2((5[0-5])|([0-4]\\d))|[01](\\d){2})|(1\\d{2})|(\\d{1,2}))"))) {
+            writter.write("Set server adress to " + args[0]);
+            serverAdress = new InetSocketAddress(ipAndPort[0], port);
+        } else {
+            writter.write("Invalid ip adress " + ipAndPort[0]);
+        }
+        return serverAdress;
     }
 
     public static Map<String, Command> createCommands(CommandRunner<String, ?> commandRunner) {

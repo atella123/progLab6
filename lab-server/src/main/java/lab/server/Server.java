@@ -156,13 +156,14 @@ public final class Server {
     public static int getServerPort(String[] args, Writter<String> writter) {
         final int defaultPort = 1234;
         final int maxPort = 65535;
+        final int minPort = 1;
         if (args.length < 2) {
             writter.write("Set default port");
             return defaultPort;
         }
         try {
-            int port = Integer.valueOf(args[1]);
-            if (port > maxPort || port < 1) {
+            int port = Integer.parseInt(args[1]);
+            if (port > maxPort || port < minPort) {
                 writter.write("Port value must be between 0 and 65536");
                 return -1;
             }
