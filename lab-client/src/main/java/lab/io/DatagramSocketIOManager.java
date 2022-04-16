@@ -1,7 +1,5 @@
 package lab.io;
 
-import java.util.Random;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -25,7 +23,6 @@ public class DatagramSocketIOManager extends IOManager<CommandResponse, CommandW
     private static final int MAX_PACKAGE_SIZE = 65507;
     private static final int TIMEOUT = 10000;
     private final InetSocketAddress serverAddress;
-    private final Random random = new Random();
     private DatagramSocket socket;
 
     public DatagramSocketIOManager(InetSocketAddress serverAddress) throws SocketException {
@@ -37,9 +34,7 @@ public class DatagramSocketIOManager extends IOManager<CommandResponse, CommandW
 
     private void setupNewSocket() throws SocketException {
         InetSocketAddress address;
-        do {
-            address = new InetSocketAddress(random.nextInt(MAX_PACKAGE_SIZE));
-        } while (address.isUnresolved());
+        address = new InetSocketAddress(0);
         socket = new DatagramSocket(address);
         socket.connect(serverAddress);
         socket.setSoTimeout(TIMEOUT);

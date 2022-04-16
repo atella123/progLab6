@@ -155,12 +155,18 @@ public final class Server {
 
     public static int getServerPort(String[] args, Writter<String> writter) {
         final int defaultPort = 1234;
-        if (args.length == 1) {
+        final int maxPort = 65535;
+        if (args.length < 2) {
             writter.write("Set default port");
             return defaultPort;
         }
         try {
-            return Integer.valueOf(args[1]);
+            int port = Integer.valueOf(args[1]);
+            if (port > maxPort || port < 1) {
+                writter.write("Port value must be between 0 and 65536");
+                return -1;
+            }
+            return port;
         } catch (NumberFormatException e) {
             writter.write(
                     "Second agrument must either be valid integer or not present (if so will be set to default value)");
