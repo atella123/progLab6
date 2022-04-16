@@ -132,12 +132,12 @@ public final class Client {
 
     public static int getServerPort(String[] args, Writter<String> writter) {
         final int defaultPort = 1234;
-        if (args.length < 2) {
+        if (args.length < 1) {
             writter.write("Set default port");
             return defaultPort;
         }
         try {
-            return Integer.valueOf(args[1]);
+            return Integer.valueOf(args[0]);
         } catch (NumberFormatException e) {
             writter.write(
                     "Second agrument must either be valid integer or not present (if so will be set to default value)");
