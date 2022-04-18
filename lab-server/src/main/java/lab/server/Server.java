@@ -13,6 +13,9 @@ import java.util.Scanner;
 
 import com.google.gson.Gson;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import lab.commands.SaveAndExit;
 import lab.common.commands.Add;
 import lab.common.commands.AddIfMax;
@@ -45,11 +48,14 @@ import lab.util.ServerToClientCommandRunner;
 
 public final class Server {
 
+    private static final Logger LOGGER = LogManager.getLogger(lab.server.Server.class);
+
     private Server() {
         throw new UnsupportedOperationException("This is an utility class and can not be instantiated");
     }
 
     public static void main(String[] args) {
+        LOGGER.info("aboba");
         Scanner scanner = new Scanner(System.in);
         IOManager<String, String> io = new IOManager<>(
                 () -> {
@@ -80,11 +86,9 @@ public final class Server {
         clientCommandManager.setCommands(createClientCommandsMap(manager, clientCommandRunner));
         CommandManager<String> serverCommandManager = new CommandManager<>(
                 createServerCommandsMap(manager, gson, file));
-        CommandRunner<String, String> serverCommandRunner = new DefaultCommandRunner(serverCommandManager,
+        CommandRunner<String, String, Object> serverCommandRunner = new DefaultCommandRunner(serverCommandManager,
                 new ArgumentParser<>(), new IOManager<>(io::readLine, createDefaultWritter()));
-        PersonCollectionServer personCollectionServer = new PersonCollectionServer(serverCommandRunner,
-                clientCommandRunner);
-        personCollectionServer.start();
+        PersonCollectionServer.start(serverCommandRunner, clientCommandRunner);
         scanner.close();
     }
 

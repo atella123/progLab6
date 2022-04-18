@@ -86,7 +86,7 @@ public final class Client {
                     }
                 });
         CommandManager<String> serverCommandManager = new CommandManager<>(createServerCommandsMap());
-        CommandRunner<String, String> toServerCommandRunner = new DefaultCommandRunner(
+        CommandRunner<String, String, Object> toServerCommandRunner = new DefaultCommandRunner(
                 serverCommandManager,
                 argumentParser, commandRunnerIO);
         ClientCommandRunner runner = new ClientCommandRunner(clientCommandManager, toServerCommandRunner,
@@ -96,7 +96,7 @@ public final class Client {
         return runner;
     }
 
-    public static void updateArgumentParser(ArgumentParser<Object> argumentParser, CommandRunner<String, ?> runner,
+    public static void updateArgumentParser(ArgumentParser<Object> argumentParser, CommandRunner<String, ?, ?> runner,
             CommandManager<String> commandManager) {
         argumentParser.add(Command.class, commandManager::get);
         argumentParser.add(Integer.class, x -> {
@@ -168,7 +168,7 @@ public final class Client {
         return serverAdress;
     }
 
-    public static Map<String, Command> createCommands(CommandRunner<String, ?> commandRunner) {
+    public static Map<String, Command> createCommands(CommandRunner<String, ?, ?> commandRunner) {
         HashMap<String, Command> commands = new HashMap<>();
         commands.put("exit", new Exit());
         commands.put("execute_script", new ExecuteScript(commandRunner));

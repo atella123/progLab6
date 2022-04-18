@@ -14,7 +14,7 @@ import lab.common.io.Reader;
 
 public final class ExecuteScript extends Command {
 
-    private final CommandRunner<String, ?> runner;
+    private final CommandRunner<String, ?, ?> runner;
     private Stack<File> bannedFiles = new Stack<>();
     private Stack<Reader<String>> oldIO = new Stack<>();
 
@@ -23,7 +23,7 @@ public final class ExecuteScript extends Command {
         runner = null;
     }
 
-    public ExecuteScript(CommandRunner<String, ?> runner) {
+    public ExecuteScript(CommandRunner<String, ?, ?> runner) {
         super(true);
         this.runner = runner;
     }

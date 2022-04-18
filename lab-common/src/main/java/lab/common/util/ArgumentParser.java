@@ -6,10 +6,10 @@ import lab.common.exceptions.NoParserAvailableException;
 
 public class ArgumentParser<T> {
 
-    private HashMap<Class<?>, Converter<T, ?>> classParsers;
+    private final HashMap<Class<?>, Converter<T, ?>> classParsers = new HashMap<>();
 
     public ArgumentParser() {
-        classParsers = new HashMap<>();
+        add(Object.class, x -> x);
     }
 
     public <A> void add(Class<A> clazz, Converter<T, A> converter) {
@@ -38,7 +38,7 @@ public class ArgumentParser<T> {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((classParsers == null) ? 0 : classParsers.hashCode());
+        result = prime * result + classParsers.hashCode();
         return result;
     }
 
@@ -54,9 +54,6 @@ public class ArgumentParser<T> {
             return false;
         }
         ArgumentParser<?> other = (ArgumentParser<?>) obj;
-        if (classParsers == null) {
-            return other.classParsers == null;
-        }
         return classParsers.equals(other.classParsers);
     }
 

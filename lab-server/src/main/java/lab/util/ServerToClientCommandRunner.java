@@ -8,7 +8,7 @@ import lab.common.util.CommandManager;
 import lab.common.util.CommandRunner;
 import lab.common.util.CommandWithArguments;
 
-public class ServerToClientCommandRunner extends CommandRunner<CommandWithArguments, Class<? extends Command>> {
+public class ServerToClientCommandRunner extends CommandRunner<CommandWithArguments, Class<? extends Command>, Object> {
     public ServerToClientCommandRunner(CommandManager<Class<? extends Command>> commandManager,
             ArgumentParser<Object> argumentParser, IOManager<CommandWithArguments, CommandResponse> io) {
         super(commandManager, argumentParser, io);

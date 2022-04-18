@@ -14,18 +14,17 @@ import lab.common.util.CommandManager;
 import lab.common.util.CommandRunner;
 import lab.io.DatagramSocketIOManager;
 
-public class ClientCommandRunner extends CommandRunner<String, String> {
+public class ClientCommandRunner extends CommandRunner<String, String, Object> {
 
-    private final RequestServer<String> requestCommand;
+    private final RequestServer<String, String> requestCommand;
 
     public ClientCommandRunner(CommandManager<String> clientCommands,
-            CommandRunner<String, String> serverCommandRunner,
+            CommandRunner<String, String, Object> serverCommandRunner,
             ArgumentParser<Object> argumentParser,
             InetSocketAddress serverAddress,
             IOManager<String, CommandResponse> io) throws SocketException {
         super(clientCommands, argumentParser, io);
-        requestCommand = new RequestServer<>(new DatagramSocketIOManager(serverAddress), serverCommandRunner,
-                argumentParser);
+        requestCommand = new RequestServer<>(new DatagramSocketIOManager(serverAddress), serverCommandRunner);
     }
 
     @Override
@@ -36,7 +35,7 @@ public class ClientCommandRunner extends CommandRunner<String, String> {
         if (Objects.nonNull(command)) {
             return command;
         }
-        if (requestCommand.getToServerCommandRunner().getCommandManager().containsKey(cmd)) {
+        if (requestCommand.getCommandManager().containsKey(cmd)) {
             return requestCommand;
         }
         return null;
@@ -49,10 +48,6 @@ public class ClientCommandRunner extends CommandRunner<String, String> {
             splittedString = Arrays.copyOfRange(splittedString, 1, splittedString.length);
         }
         return splittedString;
-    }
-
-    public void setRequestCommandArgumentParser(ArgumentParser<Object> argumentParser) {
-        ((RequestServer<?>) getCommandManager().get("")).setArgumentParser(argumentParser);
     }
 
     public static ArgumentParser<Object> createRunnerArgumentParser(CommandManager<String> serverCommands) {

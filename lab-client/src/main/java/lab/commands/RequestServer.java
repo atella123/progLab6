@@ -5,23 +5,20 @@ import java.util.Arrays;
 import lab.common.commands.Command;
 import lab.common.commands.CommandResponse;
 import lab.common.commands.CommandResult;
-import lab.common.util.ArgumentParser;
+import lab.common.util.CommandManager;
 import lab.common.util.CommandRunner;
 import lab.common.util.CommandWithArguments;
 import lab.io.DatagramSocketIOManager;
 
-public final class RequestServer<R> extends Command {
+public final class RequestServer<R, C> extends Command {
 
     private final DatagramSocketIOManager io;
-    private CommandRunner<R, R> toServerCommandRunner;
-    private ArgumentParser<Object> argumentParser;
+    private final CommandRunner<R, C, Object> toServerCommandRunner;
 
-    public RequestServer(DatagramSocketIOManager io, CommandRunner<R, R> toServerCommandRunner,
-            ArgumentParser<Object> argumentParser) {
+    public RequestServer(DatagramSocketIOManager io, CommandRunner<R, C, Object> toServerCommandRunner) {
         super(true);
         this.io = io;
         this.toServerCommandRunner = toServerCommandRunner;
-        this.argumentParser = argumentParser;
     }
 
     @Override
@@ -58,20 +55,7 @@ public final class RequestServer<R> extends Command {
         return "request_server command_name arguments... : запросить сервер выполнить указанную комманду с указанными аргументами";
     }
 
-    public ArgumentParser<Object> getArgumentParser() {
-        return argumentParser;
+    public CommandManager<C> getCommandManager() {
+        return toServerCommandRunner.getCommandManager();
     }
-
-    public void setArgumentParser(ArgumentParser<Object> argumentParser) {
-        this.argumentParser = argumentParser;
-    }
-
-    public CommandRunner<R, R> getToServerCommandRunner() {
-        return toServerCommandRunner;
-    }
-
-    public void setToServerCommandRunner(CommandRunner<R, R> toServerCommandRunner) {
-        this.toServerCommandRunner = toServerCommandRunner;
-    }
-
 }

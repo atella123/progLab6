@@ -6,13 +6,13 @@ import lab.common.util.CommandRunner;
 
 public final class History extends Command {
 
-    private CommandRunner<?, ?> commands;
+    private CommandRunner<?, ?, ?> commands;
 
     public History() {
         super();
     }
 
-    public History(CommandRunner<?, ?> commands) {
+    public History(CommandRunner<?, ?, ?> commands) {
         super(true);
         this.commands = commands;
     }

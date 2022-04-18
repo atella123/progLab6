@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import lab.common.commands.Command;
 import lab.common.commands.CommandResponse;
@@ -12,15 +13,15 @@ import lab.common.io.IOManager;
 import lab.common.io.Reader;
 import lab.common.io.Writter;
 
-public abstract class CommandRunner<R, K> {
+public abstract class CommandRunner<R, C, A> {
 
     private static final int HISTORY_SIZE = 11;
     private IOManager<R, CommandResponse> io;
-    private final CommandManager<K> commandManager;
+    private final CommandManager<C> commandManager;
     private ArrayList<Command> history = new ArrayList<>(HISTORY_SIZE);
-    private ArgumentParser<Object> argumentParser;
+    private ArgumentParser<A> argumentParser;
 
-    public CommandRunner(CommandManager<K> commandManager, ArgumentParser<Object> argumentParser,
+    public CommandRunner(CommandManager<C> commandManager, ArgumentParser<A> argumentParser,
             IOManager<R, CommandResponse> io) {
         this.commandManager = commandManager;
         this.argumentParser = argumentParser;
@@ -29,7 +30,7 @@ public abstract class CommandRunner<R, K> {
 
     public abstract Command parseCommand(R arg);
 
-    public abstract Object[] parseArgumentsFromReadedObject(R arg);
+    public abstract A[] parseArgumentsFromReadedObject(R arg);
 
     public void run() {
         CommandResponse resp;
@@ -69,20 +70,19 @@ public abstract class CommandRunner<R, K> {
         return cmd.execute(args);
     }
 
-    public Object[] parseArguments(Command command, Object[] argumentsToParse) {
+    public Object[] parseArguments(Command command, A[] argumentsToParse) {
         Class<?>[] argumentClasses = command.getArgumentClasses();
-        ArrayList<Object> arguments = new ArrayList<>(argumentClasses.length);
-        arguments.addAll(Arrays.asList(argumentsToParse));
-        if (argumentClasses.length > argumentsToParse.length) {
-            arguments.addAll(Arrays.asList(new Object[argumentClasses.length - argumentsToParse.length]));
-        }
+        ArrayList<Object> arguments = new ArrayList<>();
         for (int i = 0; i < argumentClasses.length; i++) {
-            Object nextArg = argumentParser.convert(argumentClasses[i], arguments.get(i));
+            Object nextArg = argumentParser.convert(argumentClasses[i],
+                    argumentsToParse.length < i ? null : argumentsToParse[i]);
             if (Objects.isNull(nextArg)) {
                 return new Object[0];
             }
-            arguments.set(i, nextArg);
+            arguments.add(nextArg);
         }
+        arguments.addAll(Arrays.stream(argumentsToParse).map(Object.class::cast).skip(arguments.size())
+                .collect(Collectors.toList()));
         return arguments.toArray();
     }
 
@@ -118,7 +118,7 @@ public abstract class CommandRunner<R, K> {
         io.setWritter(writter);
     }
 
-    public CommandManager<K> getCommandManager() {
+    public CommandManager<C> getCommandManager() {
         return commandManager;
     }
 
