@@ -41,7 +41,7 @@ import lab.common.util.CommandManager;
 import lab.common.util.CommandRunner;
 import lab.common.util.DataReader;
 import lab.common.util.DefaultCommandRunner;
-import lab.util.ClientCommandRunner;
+import lab.util.ClientToServerCommandRunner;
 
 public final class Client {
 
@@ -69,7 +69,8 @@ public final class Client {
         scanner.close();
     }
 
-    public static ClientCommandRunner createCommandRunner(InetSocketAddress serverAdress, IOManager<String, ?> io)
+    public static ClientToServerCommandRunner createCommandRunner(InetSocketAddress serverAdress,
+            IOManager<String, ?> io)
             throws SocketException {
         CommandManager<String> clientCommandManager = new CommandManager<>();
         ArgumentParser<Object> argumentParser = new ArgumentParser<>();
@@ -88,16 +89,15 @@ public final class Client {
         CommandRunner<String, String> toServerCommandRunner = new DefaultCommandRunner(
                 serverCommandManager,
                 argumentParser, commandRunnerIO);
-        ClientCommandRunner runner = new ClientCommandRunner(clientCommandManager, toServerCommandRunner,
+        ClientToServerCommandRunner runner = new ClientToServerCommandRunner(clientCommandManager,
+                toServerCommandRunner,
                 argumentParser, serverAdress, commandRunnerIO);
-        updateArgumentParser(argumentParser, runner, serverCommandManager);
+        updateArgumentParser(argumentParser, runner);
         clientCommandManager.setCommands(createCommands(runner));
         return runner;
     }
 
-    public static void updateArgumentParser(ArgumentParser<Object> argumentParser, CommandRunner<String, ?> runner,
-            CommandManager<String> commandManager) {
-        argumentParser.add(Command.class, commandManager::get);
+    public static void updateArgumentParser(ArgumentParser<Object> argumentParser, CommandRunner<String, ?> runner) {
         argumentParser.add(Integer.class, x -> {
             try {
                 return Integer.valueOf(x.toString());

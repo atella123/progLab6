@@ -26,7 +26,10 @@ public final class RequestServer<R, C> extends Command {
         if (!isVaildArgument(args)) {
             return new CommandResponse(CommandResult.ERROR, "Illegal argument");
         }
-        Command command = (Command) args[0];
+        if (!toServerCommandRunner.getCommandManager().containsKey(args[0])) {
+            return new CommandResponse(CommandResult.ERROR, "Unknown command");
+        }
+        Command command = toServerCommandRunner.getCommandManager().get(args[0]);
         Object[] parsedArgs = toServerCommandRunner.parseArguments(command, Arrays.copyOfRange(args, 1, args.length));
         if (!command.isVaildArgument(parsedArgs)) {
             return new CommandResponse(CommandResult.ERROR, "Illegal argument");
@@ -38,16 +41,13 @@ public final class RequestServer<R, C> extends Command {
 
     @Override
     public boolean isVaildArgument(Object... args) {
-        if (args.length > 0 && args[0] instanceof Command) {
-            return toServerCommandRunner.getCommandManager().containsValue((Command) args[0]);
-        }
-        return false;
+        return args.length > 0;
     }
 
     @Override
     public Class<?>[] getArgumentClasses() {
         return new Class[] {
-                Command.class };
+                Object.class };
     }
 
     @Override
