@@ -7,3 +7,4 @@
 .vscode
 *.jar
 /test/
+.DS_Store
