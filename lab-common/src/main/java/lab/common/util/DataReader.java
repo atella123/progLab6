@@ -14,7 +14,7 @@ public final class DataReader {
     }
 
     public static String readString(IOManager<String, String> io) {
-        String s = io.readLine();
+        String s = io.read();
         if (Objects.isNull(s)) {
             throw new StringIsNullException();
         }

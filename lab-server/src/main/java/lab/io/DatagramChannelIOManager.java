@@ -17,8 +17,6 @@ import org.apache.logging.log4j.Logger;
 import lab.common.commands.CommandResponse;
 import lab.common.commands.CommandResult;
 import lab.common.io.IOManager;
-import lab.common.io.Writter;
-import lab.common.io.Reader;
 import lab.common.util.CommandWithArguments;
 
 public class DatagramChannelIOManager extends IOManager<CommandWithArguments, CommandResponse> {
@@ -32,39 +30,35 @@ public class DatagramChannelIOManager extends IOManager<CommandWithArguments, Co
         datagramChannel = DatagramChannel.open();
         datagramChannel.bind(new InetSocketAddress(port));
         datagramChannel.configureBlocking(false);
-        setReader(createReader());
-        setWritter(createWritter());
+        setReader(this::readCommandWithArgs);
+        setWritter(this::writeResponse);
     }
 
-    private Reader<CommandWithArguments> createReader() {
-        return () -> {
-            ByteBuffer inputPackages = ByteBuffer.wrap(new byte[MAX_PACKAGE_SIZE]);
-            try {
-                lastRemotAddress = datagramChannel.receive(inputPackages);
-                ObjectInputStream objectInputStream = new ObjectInputStream(
-                        new ByteArrayInputStream(inputPackages.array()));
-                CommandWithArguments input = (CommandWithArguments) objectInputStream.readObject();
-                if (Objects.nonNull(input)) {
-                    LOGGER.info("New client request recivied from {} to execute {} command", lastRemotAddress,
-                            input.getCommandClass().getSimpleName());
-                }
-                return input;
-            } catch (IOException | ClassNotFoundException e) {
-                return null;
+    private CommandWithArguments readCommandWithArgs() {
+        ByteBuffer inputPackages = ByteBuffer.wrap(new byte[MAX_PACKAGE_SIZE]);
+        try {
+            lastRemotAddress = datagramChannel.receive(inputPackages);
+            ObjectInputStream objectInputStream = new ObjectInputStream(
+                    new ByteArrayInputStream(inputPackages.array()));
+            CommandWithArguments input = (CommandWithArguments) objectInputStream.readObject();
+            if (Objects.nonNull(input)) {
+                LOGGER.info("New client request recivied from {} to execute {} command", lastRemotAddress,
+                        input.getCommandClass().getSimpleName());
             }
-        };
+            return input;
+        } catch (IOException | ClassNotFoundException e) {
+            return null;
+        }
     }
 
-    private Writter<CommandResponse> createWritter() {
-        return (CommandResponse response) -> {
-            if (response.getResult().equals(CommandResult.COMMAND_NOT_FOUND)
-                    || response.getResult().equals(CommandResult.NO_INPUT)) {
-                return;
-            }
-            ByteArrayOutputStream dataOutputStream = serealizeCommandResponse(response);
-            writeNextDatagram(ByteBuffer.wrap(dataOutputStream.toByteArray()));
-            LOGGER.info("Send reply to client {}", lastRemotAddress);
-        };
+    private void writeResponse(CommandResponse response) {
+        if (response.getResult().equals(CommandResult.COMMAND_NOT_FOUND)
+                || response.getResult().equals(CommandResult.NO_INPUT)) {
+            return;
+        }
+        ByteArrayOutputStream dataOutputStream = serealizeCommandResponse(response);
+        writeNextDatagram(ByteBuffer.wrap(dataOutputStream.toByteArray()));
+        LOGGER.info("Send reply to client {}", lastRemotAddress);
     }
 
     private ByteArrayOutputStream serealizeCommandResponse(CommandResponse response) {

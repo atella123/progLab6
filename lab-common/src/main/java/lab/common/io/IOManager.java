@@ -39,7 +39,7 @@ public class IOManager<R, W> {
         writter.write(message);
     }
 
-    public R readLine() {
+    public R read() {
         return reader.readLine();
     }
 

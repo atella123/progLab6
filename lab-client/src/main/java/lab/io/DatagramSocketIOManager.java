@@ -14,8 +14,6 @@ import java.net.SocketTimeoutException;
 import lab.common.commands.CommandResponse;
 import lab.common.commands.CommandResult;
 import lab.common.io.IOManager;
-import lab.common.io.Reader;
-import lab.common.io.Writter;
 import lab.common.util.CommandWithArguments;
 
 public class DatagramSocketIOManager extends IOManager<CommandResponse, CommandWithArguments> {
@@ -28,8 +26,8 @@ public class DatagramSocketIOManager extends IOManager<CommandResponse, CommandW
     public DatagramSocketIOManager(InetSocketAddress serverAddress) throws SocketException {
         this.serverAddress = serverAddress;
         setupNewSocket();
-        setReader(createReader());
-        setWritter(createWritter());
+        setReader(this::readResponse);
+        setWritter(this::writeCommandWithArgs);
     }
 
     private void setupNewSocket() throws SocketException {
@@ -49,35 +47,31 @@ public class DatagramSocketIOManager extends IOManager<CommandResponse, CommandW
         }
     }
 
-    private Reader<CommandResponse> createReader() {
-        return () -> {
-            try {
-                DatagramPacket packet = new DatagramPacket(new byte[MAX_PACKAGE_SIZE], MAX_PACKAGE_SIZE);
-                socket.receive(packet);
-                ByteArrayInputStream byteInputStream = new ByteArrayInputStream(packet.getData());
-                ObjectInputStream objectInputStream = new ObjectInputStream(byteInputStream);
-                return (CommandResponse) objectInputStream.readObject();
-            } catch (SocketTimeoutException e) {
-                return setupNewSocketSuppresed();
-            } catch (IOException | ClassNotFoundException e) {
-                return new CommandResponse(CommandResult.ERROR, "Couldn't get response from server");
-            }
-        };
+    private CommandResponse readResponse() {
+        try {
+            DatagramPacket packet = new DatagramPacket(new byte[MAX_PACKAGE_SIZE], MAX_PACKAGE_SIZE);
+            socket.receive(packet);
+            ByteArrayInputStream byteInputStream = new ByteArrayInputStream(packet.getData());
+            ObjectInputStream objectInputStream = new ObjectInputStream(byteInputStream);
+            return (CommandResponse) objectInputStream.readObject();
+        } catch (SocketTimeoutException e) {
+            return setupNewSocketSuppresed();
+        } catch (IOException | ClassNotFoundException e) {
+            return new CommandResponse(CommandResult.ERROR, "Couldn't get response from server");
+        }
     }
 
-    private Writter<CommandWithArguments> createWritter() {
-        return (CommandWithArguments response) -> {
-            try {
-                ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteOutputStream);
-                objectOutputStream.writeObject(response);
-                DatagramPacket packet = new DatagramPacket(byteOutputStream.toByteArray(),
-                        byteOutputStream.toByteArray().length);
-                socket.send(packet);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        };
+    private void writeCommandWithArgs(CommandWithArguments commandWithArgs) {
+        try {
+            ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteOutputStream);
+            objectOutputStream.writeObject(commandWithArgs);
+            DatagramPacket packet = new DatagramPacket(byteOutputStream.toByteArray(),
+                    byteOutputStream.toByteArray().length);
+            socket.send(packet);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
