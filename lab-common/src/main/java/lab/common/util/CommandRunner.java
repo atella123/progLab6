@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import lab.common.commands.Command;
 import lab.common.commands.CommandResponse;
@@ -13,15 +12,15 @@ import lab.common.io.IOManager;
 import lab.common.io.Reader;
 import lab.common.io.Writter;
 
-public abstract class CommandRunner<R, C, A> {
+public abstract class CommandRunner<R, C> {
 
     private static final int HISTORY_SIZE = 11;
     private IOManager<R, CommandResponse> io;
     private final CommandManager<C> commandManager;
     private ArrayList<Command> history = new ArrayList<>(HISTORY_SIZE);
-    private ArgumentParser<A> argumentParser;
+    private ArgumentParser<Object> argumentParser;
 
-    public CommandRunner(CommandManager<C> commandManager, ArgumentParser<A> argumentParser,
+    public CommandRunner(CommandManager<C> commandManager, ArgumentParser<Object> argumentParser,
             IOManager<R, CommandResponse> io) {
         this.commandManager = commandManager;
         this.argumentParser = argumentParser;
@@ -30,7 +29,7 @@ public abstract class CommandRunner<R, C, A> {
 
     public abstract Command parseCommand(R arg);
 
-    public abstract A[] parseArgumentsFromReadedObject(R arg);
+    public abstract Object[] parseArgumentsFromReadedObject(R arg);
 
     public void run() {
         CommandResponse resp;
@@ -70,19 +69,20 @@ public abstract class CommandRunner<R, C, A> {
         return cmd.execute(args);
     }
 
-    public Object[] parseArguments(Command command, A[] argumentsToParse) {
+    public Object[] parseArguments(Command command, Object[] argumentsToParse) {
         Class<?>[] argumentClasses = command.getArgumentClasses();
-        ArrayList<Object> arguments = new ArrayList<>();
+        ArrayList<Object> arguments = new ArrayList<>(argumentClasses.length);
+        arguments.addAll(Arrays.asList(argumentsToParse));
+        if (argumentClasses.length > argumentsToParse.length) {
+            arguments.addAll(Arrays.asList(new Object[argumentClasses.length - argumentsToParse.length]));
+        }
         for (int i = 0; i < argumentClasses.length; i++) {
-            Object nextArg = argumentParser.convert(argumentClasses[i],
-                    argumentsToParse.length < i ? null : argumentsToParse[i]);
+            Object nextArg = argumentParser.convert(argumentClasses[i], arguments.get(i));
             if (Objects.isNull(nextArg)) {
                 return new Object[0];
             }
-            arguments.add(nextArg);
+            arguments.set(i, nextArg);
         }
-        arguments.addAll(Arrays.stream(argumentsToParse).map(Object.class::cast).skip(arguments.size())
-                .collect(Collectors.toList()));
         return arguments.toArray();
     }
 

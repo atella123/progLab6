@@ -36,7 +36,6 @@ import lab.common.commands.Update;
 import lab.common.data.Person;
 import lab.common.data.PersonCollectionManager;
 import lab.common.io.IOManager;
-import lab.common.io.Writter;
 import lab.common.json.DefalutGsonCreator;
 import lab.common.util.ArgumentParser;
 import lab.common.util.CommandManager;
@@ -55,23 +54,16 @@ public final class Server {
     }
 
     public static void main(String[] args) {
-        LOGGER.info("aboba");
         Scanner scanner = new Scanner(System.in);
-        IOManager<String, String> io = new IOManager<>(
-                () -> {
-                    if (scanner.hasNext()) {
-                        return scanner.nextLine();
-                    }
-                    return "";
-                }, System.out::println);
-        File file = getSourceFile(args, io::write);
-        int port = getServerPort(args, io::write);
+        IOManager<String, CommandResponse> io = createDefaultIOManager(scanner);
+        File file = getSourceFile(args);
+        int port = getServerPort(args);
         if (Objects.isNull(file) || port == -1) {
             scanner.close();
             return;
         }
         Gson gson = DefalutGsonCreator.createGson();
-        Collection<Person> collection = readCollectionFromFile(file, gson, io::write);
+        Collection<Person> collection = readCollectionFromFile(file, gson);
         PersonCollectionManager manager = new PersonCollectionManager(collection);
         CommandManager<Class<? extends Command>> clientCommandManager = new CommandManager<>();
         ServerToClientCommandRunner clientCommandRunner;
@@ -79,40 +71,38 @@ public final class Server {
             clientCommandRunner = new ServerToClientCommandRunner(clientCommandManager,
                     new ArgumentParser<>(), new DatagramChannelIOManager(port));
         } catch (IOException e) {
-            io.write("Socket is already bound");
+            LOGGER.error("Starting server failed: {}", e.getMessage());
             scanner.close();
             return;
         }
         clientCommandManager.setCommands(createClientCommandsMap(manager, clientCommandRunner));
         CommandManager<String> serverCommandManager = new CommandManager<>(
                 createServerCommandsMap(manager, gson, file));
-        CommandRunner<String, String, Object> serverCommandRunner = new DefaultCommandRunner(serverCommandManager,
-                new ArgumentParser<>(), new IOManager<>(io::readLine, createDefaultWritter()));
+        CommandRunner<String, String> serverCommandRunner = new DefaultCommandRunner(serverCommandManager,
+                new ArgumentParser<>(), io);
+        LOGGER.info("Starting server at port {}", port);
         PersonCollectionServer.start(serverCommandRunner, clientCommandRunner);
+        LOGGER.info("Server stopped");
         scanner.close();
     }
 
     @SuppressWarnings("unchecked")
-    public static Collection<Person> readCollectionFromFile(File file, Gson gson, Writter<String> writter) {
+    public static Collection<Person> readCollectionFromFile(File file, Gson gson) {
         StringBuilder jsonBuilder = new StringBuilder();
-        if (file.exists() && file.isFile()) {
-            try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
-                String line = bufferedReader.readLine();
-                while (line != null) {
-                    jsonBuilder.append(line);
-                    jsonBuilder.append("\n");
-                    line = bufferedReader.readLine();
-                }
-                String result = jsonBuilder.toString().trim();
-                if (result.length() != 0) {
-                    return gson.fromJson(result, HashSet.class);
-                }
-                writter.write("File is empty");
-            } catch (IOException e) {
-                writter.write("Can't read collection from file");
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+            String line = bufferedReader.readLine();
+            while (line != null) {
+                jsonBuilder.append(line);
+                jsonBuilder.append("\n");
+                line = bufferedReader.readLine();
             }
-        } else {
-            writter.write("Can't find file");
+            String result = jsonBuilder.toString().trim();
+            if (result.length() != 0) {
+                return gson.fromJson(result, HashSet.class);
+            }
+            LOGGER.error("Starting server with new empty collection");
+        } catch (IOException e) {
+            LOGGER.error("Starting server failed: Can't read from file");
         }
         return new HashSet<>();
     }
@@ -144,46 +134,54 @@ public final class Server {
         return commands;
     }
 
-    public static File getSourceFile(String[] args, Writter<String> writter) {
+    public static File getSourceFile(String[] args) {
         if (args.length == 0) {
-            writter.write("Path to collection file must be provided");
+            LOGGER.error("Starting server falied: Path to collection file must be provided");
             return null;
         }
         File file = new File(args[0]);
-        if (file.exists()) {
-            return file;
+        if (!file.exists() || !file.isFile()) {
+            LOGGER.error("Starting server failed: File not found");
+            return null;
         }
-        writter.write("No file found");
-        return null;
+        if (!file.canRead()) {
+            LOGGER.error("Starting server failed: Can't read from file");
+            return null;
+        }
+        return file;
     }
 
-    public static int getServerPort(String[] args, Writter<String> writter) {
+    public static int getServerPort(String[] args) {
         final int defaultPort = 1234;
         final int maxPort = 65535;
         final int minPort = 1;
         if (args.length < 2) {
-            writter.write("Set default port");
+            LOGGER.info("Port value set as default (1234)");
             return defaultPort;
         }
-        try {
+        if (args[1].matches("\\d{1,5}")) {
             int port = Integer.parseInt(args[1]);
-            if (port > maxPort || port < minPort) {
-                writter.write("Port value must be between 0 and 65536");
-                return -1;
+            if (port <= maxPort && port >= minPort) {
+                return port;
             }
-            return port;
-        } catch (NumberFormatException e) {
-            writter.write(
-                    "Second agrument must either be valid integer or not present (if so will be set to default value)");
         }
+        LOGGER.error(
+                "Second argument must either be valid port value or not present (if so it will be set to default value)");
         return -1;
     }
 
-    public static Writter<CommandResponse> createDefaultWritter() {
-        return (CommandResponse response) -> {
-            if (response.hasPrintableResult()) {
-                System.out.println(response.getMessage());
-            }
-        };
+    public static IOManager<String, CommandResponse> createDefaultIOManager(Scanner scanner) {
+        return new IOManager<>(
+                () -> {
+                    if (scanner.hasNext()) {
+                        return scanner.nextLine();
+                    }
+                    return "";
+                },
+                (CommandResponse response) -> {
+                    if (response.hasPrintableResult()) {
+                        System.out.println(response.getMessage());
+                    }
+                });
     }
 }

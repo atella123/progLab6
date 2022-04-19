@@ -21,7 +21,7 @@ import lab.common.util.CommandWithArguments;
 public class DatagramSocketIOManager extends IOManager<CommandResponse, CommandWithArguments> {
 
     private static final int MAX_PACKAGE_SIZE = 65507;
-    private static final int TIMEOUT = 10000;
+    private static final int TIMEOUT = 1000;
     private final InetSocketAddress serverAddress;
     private DatagramSocket socket;
 

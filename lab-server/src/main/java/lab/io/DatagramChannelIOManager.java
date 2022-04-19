@@ -9,6 +9,10 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.util.Objects;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import lab.common.commands.CommandResponse;
 import lab.common.commands.CommandResult;
@@ -19,6 +23,7 @@ import lab.common.util.CommandWithArguments;
 
 public class DatagramChannelIOManager extends IOManager<CommandWithArguments, CommandResponse> {
 
+    private static final Logger LOGGER = LogManager.getLogger(lab.io.DatagramChannelIOManager.class);
     private static final int MAX_PACKAGE_SIZE = 65507;
     private final DatagramChannel datagramChannel;
     private SocketAddress lastRemotAddress;
@@ -38,7 +43,12 @@ public class DatagramChannelIOManager extends IOManager<CommandWithArguments, Co
                 lastRemotAddress = datagramChannel.receive(inputPackages);
                 ObjectInputStream objectInputStream = new ObjectInputStream(
                         new ByteArrayInputStream(inputPackages.array()));
-                return (CommandWithArguments) objectInputStream.readObject();
+                CommandWithArguments input = (CommandWithArguments) objectInputStream.readObject();
+                if (Objects.nonNull(input)) {
+                    LOGGER.info("New client request recivied from {} to execute {} command", lastRemotAddress,
+                            input.getCommandClass().getSimpleName());
+                }
+                return input;
             } catch (IOException | ClassNotFoundException e) {
                 return null;
             }
@@ -53,6 +63,7 @@ public class DatagramChannelIOManager extends IOManager<CommandWithArguments, Co
             }
             ByteArrayOutputStream dataOutputStream = serealizeCommandResponse(response);
             writeNextDatagram(ByteBuffer.wrap(dataOutputStream.toByteArray()));
+            LOGGER.info("Send reply to client {}", lastRemotAddress);
         };
     }
 

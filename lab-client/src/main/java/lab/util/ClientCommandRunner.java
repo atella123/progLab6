@@ -14,12 +14,12 @@ import lab.common.util.CommandManager;
 import lab.common.util.CommandRunner;
 import lab.io.DatagramSocketIOManager;
 
-public class ClientCommandRunner extends CommandRunner<String, String, Object> {
+public class ClientCommandRunner extends CommandRunner<String, String> {
 
     private final RequestServer<String, String> requestCommand;
 
     public ClientCommandRunner(CommandManager<String> clientCommands,
-            CommandRunner<String, String, Object> serverCommandRunner,
+            CommandRunner<String, String> serverCommandRunner,
             ArgumentParser<Object> argumentParser,
             InetSocketAddress serverAddress,
             IOManager<String, CommandResponse> io) throws SocketException {

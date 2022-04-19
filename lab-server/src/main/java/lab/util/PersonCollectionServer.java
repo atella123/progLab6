@@ -13,7 +13,7 @@ public final class PersonCollectionServer {
         throw new UnsupportedOperationException();
     }
 
-    public static void start(CommandRunner<?, ?, ?> serverCommandRunner,
+    public static void start(CommandRunner<?, ?> serverCommandRunner,
             ServerToClientCommandRunner serverToClientCommandRunner) {
         boolean stop = false;
         InputStreamReader systemInReader = new InputStreamReader(System.in);

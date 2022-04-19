@@ -13,9 +13,9 @@ import lab.io.DatagramSocketIOManager;
 public final class RequestServer<R, C> extends Command {
 
     private final DatagramSocketIOManager io;
-    private final CommandRunner<R, C, Object> toServerCommandRunner;
+    private final CommandRunner<R, C> toServerCommandRunner;
 
-    public RequestServer(DatagramSocketIOManager io, CommandRunner<R, C, Object> toServerCommandRunner) {
+    public RequestServer(DatagramSocketIOManager io, CommandRunner<R, C> toServerCommandRunner) {
         super(true);
         this.io = io;
         this.toServerCommandRunner = toServerCommandRunner;

@@ -6,7 +6,7 @@ import lab.common.commands.Command;
 import lab.common.commands.CommandResponse;
 import lab.common.io.IOManager;
 
-public class DefaultCommandRunner extends CommandRunner<String, String, Object> {
+public class DefaultCommandRunner extends CommandRunner<String, String> {
 
     public DefaultCommandRunner(CommandManager<String> commandManager, ArgumentParser<Object> argumentParser,
             IOManager<String, CommandResponse> io) {
