@@ -73,7 +73,7 @@ public final class Client {
             throws SocketException {
         CommandManager<String> clientCommandManager = new CommandManager<>();
         ArgumentParser<Object> argumentParser = new ArgumentParser<>();
-        IOManager<String, CommandResponse> commandRunnerIO = new IOManager<>(io::readLine,
+        IOManager<String, CommandResponse> commandRunnerIO = new IOManager<>(io::read,
                 response -> {
                     if (response.hasPrintableResult()) {
                         System.out.println(response.getMessage());

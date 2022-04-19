@@ -33,7 +33,7 @@ public final class RequestServer<R, C> extends Command {
         }
         CommandWithArguments commandWithArguments = new CommandWithArguments(command.getClass(), parsedArgs);
         io.write(commandWithArguments);
-        return io.readLine();
+        return io.read();
     }
 
     @Override

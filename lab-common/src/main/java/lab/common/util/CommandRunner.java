@@ -41,7 +41,7 @@ public abstract class CommandRunner<R, C> {
 
     public CommandResponse runNextCommmand() {
         R nextCommandWithArgumnets;
-        nextCommandWithArgumnets = io.readLine();
+        nextCommandWithArgumnets = io.read();
         if (Objects.isNull(nextCommandWithArgumnets)) {
             return new CommandResponse(CommandResult.NO_INPUT);
         }
