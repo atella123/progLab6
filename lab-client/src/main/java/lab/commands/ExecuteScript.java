@@ -15,8 +15,8 @@ import lab.common.io.Reader;
 public final class ExecuteScript extends Command {
 
     private final CommandRunner<String, ?> runner;
-    private Stack<File> bannedFiles = new Stack<>();
-    private Stack<Reader<String>> oldIO = new Stack<>();
+    private final Stack<File> bannedFiles = new Stack<>();
+    private final Stack<Reader<String>> oldIO = new Stack<>();
 
     public ExecuteScript() {
         super();
@@ -39,7 +39,7 @@ public final class ExecuteScript extends Command {
         File file = (File) args[0];
         if (!bannedFiles.contains(file)) {
             bannedFiles.push(file);
-            try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file));) {
+            try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
                 oldIO.push(runner.getIO().getReader());
                 Reader<String> newReader = createReader(bufferedReader);
                 runner.setReader(newReader);

@@ -72,13 +72,9 @@ public class IOManager<R, W> {
             return false;
         }
         if (writter == null) {
-            if (other.writter != null) {
-                return false;
-            }
-        } else if (!writter.equals(other.writter)) {
-            return false;
+            return other.writter == null;
         }
-        return true;
+        return writter.equals(other.writter);
     }
 
 }

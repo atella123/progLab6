@@ -17,8 +17,8 @@ public abstract class CommandRunner<R, C> {
     private static final int HISTORY_SIZE = 11;
     private IOManager<R, CommandResponse> io;
     private final CommandManager<C> commandManager;
-    private ArrayList<Command> history = new ArrayList<>(HISTORY_SIZE);
-    private ArgumentParser<Object> argumentParser;
+    private final ArrayList<Command> history = new ArrayList<>(HISTORY_SIZE);
+    private final ArgumentParser<Object> argumentParser;
 
     public CommandRunner(CommandManager<C> commandManager, ArgumentParser<Object> argumentParser,
             IOManager<R, CommandResponse> io) {

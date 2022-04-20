@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 
 public class PersonCollectionManager {
 
-    private LocalDate initDate;
+    private final LocalDate initDate;
     private Collection<Person> collection;
     private final TreeSet<Integer> idSet = new TreeSet<>();
 
@@ -39,7 +39,7 @@ public class PersonCollectionManager {
     }
 
     public boolean addIfAllMatch(Person person, Predicate<Person> predicate) {
-        if (collection.stream().allMatch(predicate::test)) {
+        if (collection.stream().allMatch(predicate)) {
             add(person);
             return true;
         }

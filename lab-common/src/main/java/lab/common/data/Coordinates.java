@@ -68,13 +68,9 @@ public class Coordinates implements Comparable<Coordinates>, Serializable {
             return false;
         }
         if (y == null) {
-            if (other.y != null) {
-                return false;
-            }
-        } else if (!y.equals(other.y)) {
-            return false;
+            return other.y == null;
         }
-        return true;
+        return y.equals(other.y);
     }
 
     @Override
