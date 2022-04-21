@@ -27,6 +27,11 @@ public final class Add extends CollectionCommand {
     }
 
     @Override
+    public String toString() {
+        return "Add";
+    }
+
+    @Override
     public String getMan() {
         return "add {element} : добавить новый элемент в коллекцию";
     }
