@@ -100,7 +100,7 @@ public final class Client {
     public static void updateArgumentParser(ArgumentParser<Object> argumentParser, CommandRunner<String, ?> runner) {
         argumentParser.add(Integer.class, x -> {
             try {
-                return Integer.valueOf(x.toString());
+                return Integer.valueOf(convertToString(x));
             } catch (NumberFormatException e) {
                 return null;
             }
@@ -112,7 +112,7 @@ public final class Client {
                 x -> DataReader.readEnumValue(convertToString(x), Color.class));
         argumentParser.add(File.class, x -> {
             if (Objects.nonNull(x)) {
-                return new File(x.toString());
+                return new File(convertToString(x));
             }
             return null;
         });
