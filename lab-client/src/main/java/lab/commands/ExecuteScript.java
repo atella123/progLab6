@@ -78,9 +78,9 @@ public final class ExecuteScript extends Command {
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((bannedFiles == null) ? 0 : bannedFiles.hashCode());
-        result = prime * result + ((oldIO == null) ? 0 : oldIO.hashCode());
-        result = prime * result + ((runner == null) ? 0 : runner.hashCode());
+        result = prime * result + bannedFiles.hashCode();
+        result = prime * result + oldIO.hashCode();
+        result = prime * result + runner.hashCode();
         return result;
     }
 
@@ -96,18 +96,10 @@ public final class ExecuteScript extends Command {
             return false;
         }
         ExecuteScript other = (ExecuteScript) obj;
-        if (bannedFiles == null) {
-            if (other.bannedFiles != null) {
-                return false;
-            }
-        } else if (!bannedFiles.equals(other.bannedFiles)) {
+        if (!bannedFiles.equals(other.bannedFiles)) {
             return false;
         }
-        if (oldIO == null) {
-            if (other.oldIO != null) {
-                return false;
-            }
-        } else if (!oldIO.equals(other.oldIO)) {
+        if (!oldIO.equals(other.oldIO)) {
             return false;
         }
         if (runner == null) {
