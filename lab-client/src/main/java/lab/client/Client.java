@@ -51,10 +51,10 @@ public final class Client {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         IOManager<String, String> io = new IOManager<>(() -> {
-            if (scanner.hasNext()) {
+            if (scanner.hasNextLine()) {
                 return scanner.nextLine();
             }
-            return "";
+            return null;
         }, System.out::println);
         InetSocketAddress serverAddress = getServerAdress(args, io::write);
         if (Objects.isNull(serverAddress)) {

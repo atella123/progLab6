@@ -173,10 +173,10 @@ public final class Server {
     public static IOManager<String, CommandResponse> createDefaultIOManager(Scanner scanner) {
         return new IOManager<>(
                 () -> {
-                    if (scanner.hasNext()) {
+                    if (scanner.hasNextLine()) {
                         return scanner.nextLine();
                     }
-                    return "";
+                    return null;
                 },
                 (CommandResponse response) -> {
                     if (response.hasPrintableResult()) {
