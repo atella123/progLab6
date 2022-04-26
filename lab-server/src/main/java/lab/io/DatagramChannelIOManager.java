@@ -38,6 +38,9 @@ public class DatagramChannelIOManager extends IOManager<CommandWithArguments, Co
         ByteBuffer inputPackages = ByteBuffer.wrap(new byte[MAX_PACKAGE_SIZE]);
         try {
             lastRemotAddress = datagramChannel.receive(inputPackages);
+            if (Objects.isNull(lastRemotAddress)) {
+                return null;
+            }
             ObjectInputStream objectInputStream = new ObjectInputStream(
                     new ByteArrayInputStream(inputPackages.array()));
             CommandWithArguments input = (CommandWithArguments) objectInputStream.readObject();
